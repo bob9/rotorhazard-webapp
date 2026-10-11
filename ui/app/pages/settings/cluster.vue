@@ -148,7 +148,8 @@ function togglePw(i: number) {
     return
   }
   const cur = secs.value[i]?.password
-  if (cur && cur !== MASK) shownPw[i] = true
+  // older servers send the stored password itself, and cannot be asked for it
+  if ((cur && cur !== MASK) || !hasServerFeature('get_secondary_password')) shownPw[i] = true
   else rh.emit('get_secondary_password', { index: i })
 }
 rh.on('secondary_password', (d: any) => {

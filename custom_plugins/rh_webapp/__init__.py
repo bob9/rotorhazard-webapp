@@ -255,6 +255,8 @@ def render_webapp_info():
         'docs': docs_dir() is not None,
         'removed_plugins': removed,
         'settings_panel': SETTINGS_PANEL,
+        'features': compat.server_features(rhapi, current_app),
+        'rhapi_version': '{}.{}'.format(*compat.rhapi_version(rhapi)),
     }
     if imdtabler is not None:
         info['imdtabler'] = imdtabler

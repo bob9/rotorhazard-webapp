@@ -252,6 +252,8 @@ function onSeek(time: number) {
 }
 
 // ---- Auto Adjust: the server suggests EnterAt/ExitAt from this run's RSSI history ----
+// (RotorHazard 4.5 and earlier have no 'suggest_calibration': the button is left out)
+const autoAdjustAvailable = computed(() => hasServerFeature('suggest_calibration'))
 const autoAdjusting = ref(false)
 const canAutoAdjust = computed(() => !!props.data && marshalType.value !== MARSHAL_TYPE.PASS_PEAK_ONLY && hasHistory.value
   && (props.pilotraceId != null || (props.seat !== null && props.seat !== undefined)))
@@ -427,7 +429,7 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
               <UInputNumber :model-value="exitAt" :min="0" :max="255" size="sm" :disabled="!data" @update:model-value="setExit" />
             </UFormField>
             <!-- the tooltip sits on a wrapper: a disabled button gets no pointer events, but still says why -->
-            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY" :text="autoAdjustHint">
+            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY && autoAdjustAvailable" :text="autoAdjustHint">
               <span class="inline-flex" :class="canAutoAdjust ? '' : 'cursor-not-allowed'" :tabindex="canAutoAdjust ? undefined : 0" :aria-label="canAutoAdjust ? undefined : autoAdjustHint">
                 <UButton
                   color="neutral"

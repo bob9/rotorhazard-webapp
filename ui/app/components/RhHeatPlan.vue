@@ -8,6 +8,8 @@ const { t } = useI18n()
 const open = computed({ get: () => !!plan.value, set: (v) => { if (!v) plan.value = null } })
 const fdata = computed<any[]>(() => rh.state.frequency_data?.fdata || [])
 const assigning = ref<any>(null)
+// choosing a pilot's seat needs RotorHazard 4.4 or later (calc_pilots preassignments)
+const canAssign = computed(() => hasServerFeature('heat_plan_preassignments'))
 
 function methodLabel(s: any) {
   const heats = rh.state.heat_data?.heats || []
@@ -55,6 +57,7 @@ function confirm() {
               size="sm"
               :icon="s.frequency_change ? 'i-lucide-arrow-right-left' : undefined"
               :label="`${channelLabel(fdata[s.node_index])} ${fdata[s.node_index]?.frequency || ''}`"
+              :disabled="!canAssign"
               @click="assigning = s"
             />
             <span v-else class="text-sm text-dimmed">{{ t('Unassigned') }}</span>

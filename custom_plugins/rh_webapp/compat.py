@@ -197,6 +197,48 @@ def default_node_firmware(rhapi):
         return ''
 
 
+# --- features of this RotorHazard release ------------------------------------------
+
+# App features that older RotorHazard releases lack: the Socket.IO action each needs,
+#  with the RHAPI version of the first release that has it (used when the server's
+#  registered handlers cannot be listed, or when the feature is a change to an existing
+#  action rather than a new one: action None)
+NEWER_FEATURES = {
+    'suggest_calibration': ('suggest_calibration', (1, 6)),       # Marshal: Auto Adjust
+    'get_secondary_password': ('get_secondary_password', (1, 6)), # Cluster: show a stored password
+    'current_race_marshal': ('current_race_marshal', (1, 4)),     # Race: edit laps before saving
+    'min_first_crossing': ('set_min_first_crossing', (1, 4)),     # Race: Ignore Crossings Before
+    'heat_plan_preassignments': (None, (1, 4)),                   # Heat plan: choose a pilot's seat
+}
+
+
+def rhapi_version(rhapi):
+    try:
+        return int(rhapi.API_VERSION_MAJOR), int(rhapi.API_VERSION_MINOR)
+    except Exception:
+        return (0, 0)
+
+
+def socket_events(app):
+    '''The Socket.IO events the server handles (default namespace), or None if they
+    cannot be listed. Read from Flask-SocketIO, not from RotorHazard.'''
+    try:
+        sio = app.extensions.get('socketio')
+        events = set((getattr(sio.server, 'handlers', None) or {}).get('/', {}))
+        events.update(h[0] for h in (getattr(sio, 'handlers', None) or []) if h and (len(h) < 3 or h[2] in (None, '/')))
+        return events or None
+    except Exception:
+        return None
+
+
+def server_features(rhapi, app):
+    '''{feature: available} for the app's actions that older servers lack.'''
+    events = socket_events(app)
+    version = rhapi_version(rhapi)
+    return {name: (action in events) if action and events is not None else version >= since
+            for name, (action, since) in NEWER_FEATURES.items()}
+
+
 # --- plugin panels ---------------------------------------------------------------
 
 class PanelMarkdowns:

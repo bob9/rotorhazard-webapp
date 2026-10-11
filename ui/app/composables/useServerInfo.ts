@@ -32,6 +32,17 @@ export interface ServerInfo {
   docs?: boolean
   /** installed plugins deleted since the server started (a restart finishes removing them) */
   removed_plugins?: string[]
+  /** server features that older RotorHazard releases lack (false: hide it); absent: all available */
+  features?: Partial<Record<ServerFeature, boolean>>
+}
+
+/** Socket.IO actions newer than some supported RotorHazard releases */
+export type ServerFeature = 'suggest_calibration' | 'get_secondary_password' | 'current_race_marshal'
+  | 'min_first_crossing' | 'heat_plan_preassignments'
+
+/** True unless the server says it lacks this feature (the core-integrated server has them all). */
+export function hasServerFeature(feature: ServerFeature) {
+  return info.value?.features?.[feature] !== false
 }
 
 const info = ref<ServerInfo | null>(null)

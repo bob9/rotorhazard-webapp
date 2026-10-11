@@ -241,6 +241,7 @@ function commit(c: MarshalCommit) {
     race_id: round.value.race_id,
     pilotrace_id: pr.pilotrace_id,
     seat: pr.node_index,
+    node: pr.node_index, // RotorHazard 4.3 reads 'node'
     pilot_id: pr.pilot_id,
     laps: c.laps,
     enter_at: c.enter_at,

@@ -1,0 +1,1 @@
+import{d as e}from"./DF9_C7ns.js";var t=()=>e(`color-mode`).value;export{t};

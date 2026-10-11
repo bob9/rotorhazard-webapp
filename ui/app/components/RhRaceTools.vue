@@ -99,7 +99,7 @@ const sensors = computed(() => (Array.isArray(S.environmental_data) ? S.environm
           <UFormField :label="t('Minimum Lap Behavior')">
             <USelect :model-value="minLap.min_lap_behavior" :items="minLapBehaviors" class="w-full" @update:model-value="(v: any) => rh.emit('set_min_lap_behavior', { min_lap_behavior: v })" />
           </UFormField>
-          <UFormField :label="t('Ignore Crossings Before')" :hint="t('seconds')">
+          <UFormField v-if="hasServerFeature('min_first_crossing')" :label="t('Ignore Crossings Before')" :hint="t('seconds')">
             <UInputNumber :model-value="minLap.min_first_crossing" :min="0" class="w-full" @update:model-value="(v: any) => rh.emit('set_min_first_crossing', { min_first_crossing: v })" />
           </UFormField>
           <UFormField :label="t('Tuning Profile')">

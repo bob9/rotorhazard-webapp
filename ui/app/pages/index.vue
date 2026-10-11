@@ -319,8 +319,10 @@ const tuneSeat = ref<number | null>(null)
 const marshal = ref<any>(null)
 const marshalSeat = ref<number | null>(null)
 rh.on('current_marshal_data', (d: any) => { marshal.value = d })
+// RotorHazard 4.3 can't edit the current race's laps before saving (no 'current_race_marshal')
+const canEditCurrentLaps = computed(() => hasServerFeature('current_race_marshal'))
 watch(isDone, (d) => {
-  if (d) rh.emit('current_race_marshal')
+  if (d && canEditCurrentLaps.value) rh.emit('current_race_marshal')
   else {
     marshal.value = null
     marshalSeat.value = null
@@ -604,7 +606,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               :enter-at="S.enter_and_exit_at_levels?.enter_at_levels?.[i]"
               :exit-at="S.enter_and_exit_at_levels?.exit_at_levels?.[i]"
               :racing="isRacing"
-              :stopped="isDone && !!currentHeatId"
+              :stopped="isDone && !!currentHeatId && canEditCurrentLaps"
               :admin="!!admin"
               :min-lap-ms="minLapMs"
               @manual-lap="manualLap(i)"

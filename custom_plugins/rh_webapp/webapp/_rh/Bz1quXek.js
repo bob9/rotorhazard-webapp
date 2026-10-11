@@ -1,1 +1,0 @@
-import{u as e}from"./DZyLALNi.js";var t=()=>e(`color-mode`).value;export{t};

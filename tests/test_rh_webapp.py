@@ -16,7 +16,7 @@ import unittest
 import gevent
 import pytest
 
-from conftest import PLUGIN_DIR  # noqa: E402  (also puts RotorHazard's src on the path)
+from conftest import PLUGIN_DIR, RH_SRC  # noqa: E402  (also puts RotorHazard's src on the path)
 
 # a fresh data dir with the plugin installed the way a user installs it (plugins/rh_webapp)
 os.environ['RH_NODES'] = '4'
@@ -25,7 +25,27 @@ os.environ['RH_DATA_DIR'] = _DATA_DIR
 shutil.copytree(PLUGIN_DIR, os.path.join(_DATA_DIR, 'plugins', 'rh_webapp'),
                 ignore=shutil.ignore_patterns('__pycache__'))
 
-import server  # noqa: E402
+# RotorHazard 4.5.0-beta and earlier don't read RH_DATA_DIR: point them at the test data
+#  dir with a datapath.ini next to server.py, only while the server module loads
+_DATAPATH_INI = os.path.join(RH_SRC, 'server', 'datapath.ini')
+_ini_added = False
+with open(os.path.join(RH_SRC, 'server', 'server.py'), encoding='utf-8') as _f:
+    if 'RH_DATA_DIR' not in _f.read():
+        if os.path.exists(_DATAPATH_INI):
+            raise RuntimeError(f'{_DATAPATH_INI} exists: the tests would not use their own data dir')
+        with open(_DATAPATH_INI, 'w') as _f:
+            _f.write(_DATA_DIR + '\n')
+        _ini_added = True
+# RotorHazard 4.3 finds its program dir (and datapath.ini) from sys.argv[0]
+_argv = sys.argv
+sys.argv = [os.path.join(RH_SRC, 'server', 'server.py')]
+try:
+    import server  # noqa: E402
+finally:
+    sys.argv = _argv
+    if _ini_added:
+        os.remove(_DATAPATH_INI)
+assert os.path.samefile(os.getcwd(), _DATA_DIR), 'RotorHazard is not using the test data dir'
 from flask import Blueprint, jsonify  # noqa: E402
 
 RC = server.RaceContext
@@ -444,6 +464,19 @@ class PluginTest(unittest.TestCase):
                 source = f.read()
             for private in ('_racecontext', 'sys.modules', 'FlaskAppObj', 'AdminAuth', 'serverstate', 'serverconfig'):
                 self.assertNotIn(private, source, (name, private))
+
+    def test_features_of_this_release(self):
+        # actions newer than RotorHazard 4.4/4.5 are reported per server, from its Socket.IO handlers
+        with open(os.path.join(RH_SRC, 'server', 'server.py'), encoding='utf-8') as f:
+            source = f.read()
+        features = self.http.get('/app-info').get_json()['features']
+        for name, marker in (('suggest_calibration', 'suggest_calibration'),
+                             ('get_secondary_password', 'get_secondary_password'),
+                             ('current_race_marshal', 'current_race_marshal'),
+                             ('min_first_crossing', 'set_min_first_crossing'),
+                             ('heat_plan_preassignments', 'preassignments')):
+            self.assertIs(features[name], f"'{marker}'" in source or f'"{marker}"' in source, name)
+        self.assertEqual(webapp.compat.socket_events(server.APP) is None, False)
 
     def test_capabilities_without_public_source(self):
         info = self.http.get('/app-info').get_json()

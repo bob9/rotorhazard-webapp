@@ -6,7 +6,7 @@
 A modern, mobile-friendly web interface for the [RotorHazard](https://github.com/RotorHazard/RotorHazard)
 FPV race timer, packaged as an ordinary RotorHazard plugin (`rh_webapp`). It is a
 single-page app built with [Nuxt UI](https://ui.nuxt.com) that runs on a **stock,
-unmodified RotorHazard** (RHAPI 1.9, current `main`): no core files are changed, and
+unmodified RotorHazard 4.3.0 or later** (RHAPI 1.3+): no core files are changed, and
 the classic interface stays exactly as it is, one tap away.
 
 - Opens at the timer's address (`/` → `/app/`); the classic pages keep their URLs
@@ -27,6 +27,27 @@ the classic interface stays exactly as it is, one tap away.
 | <img src="docs/screenshots/phone-dark-race.png" alt="Race page on a phone, dark" width="300"> | <img src="docs/screenshots/phone-light-live.png" alt="Live page on a phone, light" width="300"> |
 
 <sub>Screenshots taken on a timer with a few community plugins installed (the telemetry bar and the "Plugin Pages" come from those plugins).</sub>
+
+## Compatibility
+
+| RotorHazard | RHAPI | Status | Not available in the app on this release |
+|---|---|---|---|
+| 4.3.0, 4.3.1 | 1.3 | Supported (tested on 4.3.1) | Editing the current race's laps before saving it (edit them on Marshal after saving); "Ignore Crossings Before"; choosing a pilot's seat in a heat plan; Marshal Auto Adjust |
+| 4.4.0 | 1.4 | Supported (tested) | Marshal Auto Adjust |
+| 4.5.0 beta | 1.5 | Supported (tested on 4.5.0-beta.2) | Marshal Auto Adjust |
+| `main` (4.5.1-dev) | 1.9 | Supported (tested) | Everything available |
+| 4.2 and earlier | ≤ 1.2 | Not supported | |
+
+Each feature is detected from the server it runs on (the Socket.IO actions it handles,
+listed in `/app-info` as `features`), so the app hides what a release lacks instead of
+offering a button that does nothing. Tested on each release: the plugin's test suite,
+installing `rh_webapp.zip` through RotorHazard's own *Install from file*, and a browser
+run of a race (start, laps, stop, save), Marshal (re-saving a race), Heats, Settings,
+Plugins, Docs and switching to the classic interface and back.
+
+Note for 4.3.x installed today: its pinned Flask-SocketIO 5.4 does not work with Flask
+3.1.3 or later (a RotorHazard dependency issue, not this plugin's); keep Flask at 3.1.0
+to 3.1.2 there.
 
 ## Install
 
@@ -100,6 +121,7 @@ does not offer live in [`compat.py`](custom_plugins/rh_webapp/compat.py):
 | Secondary timers (cluster) | `rhapi.config` `GENERAL.SECONDARIES` |
 | Site-wide plugin scripts | Plugin panel Markdown seen through the public `emitUI` filter, and found by the app itself from the panels it loads |
 | Docs | `rhapi.server.program_dir` |
+| Features of the running release | The Socket.IO handlers registered with Flask-SocketIO, else the RHAPI version (`rhapi.API_VERSION_MAJOR/MINOR`) |
 
 ## Differences from the core-integrated branch
 
@@ -130,7 +152,8 @@ builds the same app into RotorHazard itself. As a plugin on a stock server:
   `{type: 'config'}` returns any config item asked for, including stored credentials,
   to any client. The app asks only for `SECRETS.ADMIN_USERNAME`; the database viewer
   leaves out options whose name looks like a credential.
-- Requires RHAPI 1.9 (current RotorHazard `main`); older releases are not supported.
+- Requires RotorHazard 4.3.0 or later; features newer than the running release are
+  hidden (see Compatibility).
 
 ## Development
 
@@ -168,9 +191,13 @@ scripts/package.sh     # dist/rh_webapp.zip
 ```
 
 Tests boot a stock RotorHazard server with the plugin installed. Point `RH_SERVER_DIR`
-at a RotorHazard checkout (the folder holding `src/server`) whose Python dependencies
-are installed (`pip install -r src/server/reqsNonPi.txt pytest`); without it, upstream
-`main` is cloned once into `tests/.rotorhazard` (`RH_SERVER_REF` picks another ref):
+at a RotorHazard checkout (the folder holding `src/server`; any supported release) whose
+Python dependencies are installed (`pip install -r src/server/reqsNonPi.txt pytest`);
+without it, upstream `main` is cloned once into `tests/.rotorhazard` (`RH_SERVER_REF`
+picks another branch or tag). For releases that predate `RH_DATA_DIR`, the tests point
+the server at their own data directory with a temporary `datapath.ini` next to
+`server.py`, removed again as soon as the server has loaded. CI runs them against
+4.3.1, 4.4.0, 4.5.0-beta.2 and `main`:
 
 ```bash
 RH_SERVER_DIR=~/RotorHazard python -m pytest tests

@@ -7,6 +7,7 @@ holding src/server); without it, upstream RotorHazard (main) is cloned once into
 tests/.rotorhazard (RH_SERVER_REF picks another branch or tag).
 '''
 import os
+import re
 import subprocess
 import sys
 
@@ -36,3 +37,14 @@ for sub in ('server', os.path.join('server', 'util'), 'interface', 'tests'):
     p = os.path.join(RH_SRC, sub)
     if p not in sys.path:
         sys.path.append(p)
+
+
+def _rhapi_version():
+    with open(os.path.join(RH_SRC, 'server', 'RHAPI.py'), encoding='utf-8') as f:
+        source = f.read()
+    major = re.search(r'^API_VERSION_MAJOR = (\d+)', source, re.M).group(1)
+    minor = re.search(r'^API_VERSION_MINOR = (\d+)', source, re.M).group(1)
+    return f'{major}.{minor}'
+
+
+RHAPI_VERSION = _rhapi_version()

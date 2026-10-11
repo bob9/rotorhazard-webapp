@@ -1,0 +1,27 @@
+{
+  "name": "rotorhazard-webapp-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt generate && node scripts/publish.mjs",
+    "package-plugin": "bash ../scripts/package.sh",
+    "generate": "nuxt generate",
+    "typecheck": "nuxt typecheck",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.11.3",
+    "@types/markdown-it": "^14.2.0",
+    "markdown-it": "^15.0.2",
+    "nuxt": "^4.6.1",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.142",
+    "@iconify-json/simple-icons": "^1.2.99",
+    "typescript": "5.9",
+    "vue-tsc": "^3.3.13"
+  }
+}

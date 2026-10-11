@@ -1,0 +1,14 @@
+<!-- Shown until the app has started (first visit, slow device): the RotorHazard mark on the
+     app's own background, light or dark as the colour mode script has already chosen. -->
+<div class="rh-boot" role="status" aria-label="RotorHazard">
+  <img src="/app/rh-icon.svg" alt="" width="56" height="51">
+  <span>RotorHazard</span>
+</div>
+<style>
+  .rh-boot { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #fff; color: #18181b; font: 600 17px/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.01em; }
+  .rh-boot img { animation: rh-boot-pulse 1.6s ease-in-out infinite; }
+  .rh-boot span { opacity: .85; }
+  html.dark .rh-boot { background: #0b0b0f; color: #fafafa; }
+  @keyframes rh-boot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.94); } }
+  @media (prefers-reduced-motion: reduce) { .rh-boot img { animation: none; } }
+</style>

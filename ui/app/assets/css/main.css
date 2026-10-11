@@ -1,0 +1,204 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@source "../../../app";
+
+@theme static {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* RotorHazard orange */
+  --color-rh-50: #fff6ed;
+  --color-rh-100: #ffead4;
+  --color-rh-200: #ffd0a8;
+  --color-rh-300: #ffae71;
+  --color-rh-400: #ff8038;
+  --color-rh-500: #fe5d11;
+  --color-rh-600: #ef4207;
+  --color-rh-700: #c63008;
+  --color-rh-800: #9d280f;
+  --color-rh-900: #7e2410;
+  --color-rh-950: #440f06;
+}
+
+:root {
+  --ui-radius: 0.3rem;
+  /* light mode: a deeper RotorHazard orange, so orange text and white-on-orange buttons read at
+     4.5:1 (4.70:1 white on it, 4.5:1 on zinc-50); dark mode keeps primary-500 */
+  --ui-primary: #d43d08;
+  /* secondary text stays readable (WCAG AA, 4.5:1) on every background it sits on, up to
+     bg-elevated; muted is a step darker than dimmed, so the two still read as different levels */
+  --ui-text-dimmed: color-mix(in oklab, var(--ui-color-neutral-500) 70%, var(--ui-color-neutral-600));
+  --ui-text-muted: var(--ui-color-neutral-600);
+  /* keyboard focus: a solid ring with a gap, 3:1 or more against the page */
+  --rh-focus: var(--ui-color-primary-700);
+}
+.dark {
+  --ui-text-dimmed: color-mix(in oklab, var(--ui-color-neutral-400) 65%, var(--ui-color-neutral-500));
+  --ui-text-muted: var(--ui-color-neutral-400);
+  --rh-focus: var(--ui-color-primary-400);
+  --ui-primary: var(--ui-color-primary-500);
+  --ui-bg: #0b0b0f;
+  --ui-bg-muted: #141418;
+  --ui-bg-elevated: #1a1a1f;
+  --ui-bg-accented: #24242a;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Keyboard focus: one clearly visible ring for every control (buttons, fields, tabs, links,
+   menu and nav items, switches, checkboxes), instead of the faint 25% outline. Unlayered, so it
+   wins over the components' own focus-visible outline classes. */
+:focus-visible {
+  outline: 2px solid var(--rh-focus);
+  outline-offset: 2px;
+}
+/* on a solid colour (the orange Start Race button, a red Delete) the ring takes the text colour,
+   so it never blends into the button */
+:is(.bg-primary, .bg-error, .bg-success, .bg-warning, .bg-info, .bg-inverted):focus-visible {
+  outline-color: var(--ui-text-highlighted);
+}
+/* sidebar and menu items draw their focus on a pseudo-element; the ring on the item replaces it */
+[data-slot="link"]:focus-visible { border-radius: calc(var(--ui-radius) * 1.5); }
+[data-slot="link"]:focus-visible::before { outline: none; }
+/* text fields already show focus by their border; the ring sits right on it */
+:is(input, textarea, select, [role="combobox"]):focus-visible { outline-offset: 0; }
+
+/* "Skip to content": hidden until reached with the keyboard */
+.rh-skip {
+  position: fixed;
+  top: .5rem;
+  left: .5rem;
+  z-index: 100;
+  padding: .5rem 1rem;
+  border-radius: .5rem;
+  background: var(--ui-bg-inverted);
+  color: var(--ui-text-inverted);
+  font-weight: 600;
+  font-size: .875rem;
+  transform: translateY(calc(-100% - 1rem));
+}
+.rh-skip:focus { transform: none; }
+
+.font-display { font-family: var(--font-display); letter-spacing: -0.022em; }
+
+/* Gentle reveal used for live data rows */
+.rh-enter-active, .rh-leave-active { transition: all .35s cubic-bezier(.2,.8,.2,1); }
+.rh-enter-from { opacity: 0; transform: translateY(-6px); }
+.rh-leave-to { opacity: 0; }
+.rh-move { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+
+/* HTML from the server and plugins (Markdown blocks, messages, descriptions) */
+.rh-prose > * + *, .rh-desc > * + * { margin-top: .6em; }
+.rh-prose a, .rh-desc a { color: var(--ui-primary); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.rh-prose a:hover, .rh-desc a:hover { text-decoration-thickness: 2px; }
+.rh-prose h1, .rh-prose h2, .rh-prose h3, .rh-prose h4 { font-weight: 600; color: var(--ui-text-highlighted); line-height: 1.25; }
+.rh-prose h1 { font-size: 1.4em; } .rh-prose h2 { font-size: 1.25em; } .rh-prose h3 { font-size: 1.1em; }
+.rh-prose ul { list-style: disc; padding-left: 1.25em; } .rh-prose ol { list-style: decimal; padding-left: 1.25em; }
+.rh-prose li + li { margin-top: .25em; }
+.rh-prose code { font-family: var(--font-mono); font-size: .9em; background: var(--ui-bg-elevated); padding: .1em .35em; border-radius: .3em; }
+.rh-prose pre { background: var(--ui-bg-elevated); padding: .75em 1em; border-radius: .5em; overflow-x: auto; }
+.rh-prose pre code { background: none; padding: 0; }
+.rh-prose blockquote { border-left: 3px solid var(--ui-border-accented); padding-left: .9em; color: var(--ui-text-muted); }
+.rh-prose table { border-collapse: collapse; } .rh-prose td, .rh-prose th { border: 1px solid var(--ui-border); padding: .3em .6em; }
+.rh-prose strong { color: var(--ui-text-highlighted); }
+
+/* warm light-trail glow used behind hero areas when no artwork is installed */
+.rh-glow {
+  background:
+    radial-gradient(60% 50% at 15% 85%, rgb(254 93 17 / .55), transparent 70%),
+    radial-gradient(45% 40% at 85% 20%, rgb(219 39 119 / .35), transparent 70%),
+    radial-gradient(70% 60% at 60% 60%, rgb(124 58 237 / .18), transparent 70%),
+    #09090b;
+}
+
+/* a setting reached from search: brief highlight */
+.rh-flash {
+  /* drawn inside the element (a ring and a tint), so rounded cards that clip overflow can't hide it */
+  animation: rh-flash 2.6s ease-out;
+  border-radius: 0.75rem;
+  /* a little room around small targets (a single field) without moving the layout */
+  padding: 8px;
+  margin: -8px;
+}
+@keyframes rh-flash {
+  0%, 55% {
+    box-shadow: inset 0 0 0 2px var(--ui-primary);
+    background-color: color-mix(in oklab, var(--ui-primary) 10%, transparent);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px transparent;
+    background-color: transparent;
+  }
+}
+
+/* widgets plugins drop into a page's dock keep to the screen width (they bring their own styling) */
+#rh-plugin-dock {
+  justify-content: center;
+  max-width: 100%;
+}
+#rh-plugin-dock > * {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  /* the dock spaces its widgets; their own outer margins assume the classic page */
+  margin: 0 !important;
+}
+
+/* Documentation (pages/docs.vue): long-form reading */
+.rh-doc { font-size: 15.5px; line-height: 1.7; color: var(--ui-text); max-width: 46rem; }
+.rh-doc > * + * { margin-top: 1em; }
+.rh-doc h1, .rh-doc h2, .rh-doc h3, .rh-doc h4, .rh-doc h5, .rh-doc h6 { font-family: var(--font-display); font-weight: 600; color: var(--ui-text-highlighted); line-height: 1.25; letter-spacing: -0.015em; scroll-margin-top: 1rem; }
+.rh-doc h1 { font-size: 2rem; margin-bottom: .5em; }
+.rh-doc h2 { font-size: 1.45rem; margin-top: 2.2em; padding-top: .2em; }
+.rh-doc h3 { font-size: 1.15rem; margin-top: 1.8em; }
+.rh-doc h4 { font-size: 1.075rem; margin-top: 1.5em; }
+.rh-doc h5 { font-size: 1rem; margin-top: 1.4em; }
+.rh-doc h6 { font-size: .8rem; margin-top: 1.4em; text-transform: uppercase; letter-spacing: .06em; color: var(--ui-text-muted); }
+.rh-doc a { color: var(--ui-primary); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.rh-doc a:hover { text-decoration-thickness: 2px; }
+.rh-doc ul { list-style: disc; padding-left: 1.4em; } .rh-doc ol { list-style: decimal; padding-left: 1.4em; }
+.rh-doc li + li { margin-top: .3em; } .rh-doc li > ul, .rh-doc li > ol { margin-top: .3em; }
+.rh-doc code { font-family: var(--font-mono); font-size: .88em; background: var(--ui-bg-elevated); padding: .12em .38em; border-radius: .35em; }
+.rh-doc pre { background: var(--ui-bg-elevated); padding: .9em 1.1em; border-radius: .75rem; overflow-x: auto; font-size: .9em; line-height: 1.55; }
+.rh-doc pre code { background: none; padding: 0; font-size: 1em; }
+.rh-doc blockquote { border-left: 3px solid var(--ui-primary); padding: .2em 0 .2em 1em; color: var(--ui-text-muted); }
+.rh-doc blockquote.rh-callout { --c: var(--ui-info); border: 1px solid color-mix(in oklab, var(--c) 30%, transparent); background: color-mix(in oklab, var(--c) 8%, transparent); border-radius: .75rem; padding: .75em 1em; color: var(--ui-text); }
+.rh-doc .rh-callout > * + * { margin-top: .5em; }
+.rh-doc .rh-callout-title { display: flex; align-items: center; gap: .5em; font-weight: 600; color: var(--c); }
+.rh-doc .rh-callout-title svg { width: 1.15em; height: 1.15em; flex-shrink: 0; }
+.rh-doc blockquote.rh-callout-tip { --c: var(--ui-success); }
+.rh-doc blockquote.rh-callout-important { --c: oklch(60.6% 0.25 292.7); }
+.rh-doc blockquote.rh-callout-warning { --c: var(--ui-warning); }
+.rh-doc blockquote.rh-callout-caution { --c: var(--ui-error); }
+.rh-doc table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: .92em; }
+.rh-doc th { text-align: left; font-weight: 600; color: var(--ui-text-highlighted); background: var(--ui-bg-elevated); }
+.rh-doc td, .rh-doc th { border: 1px solid var(--ui-border); padding: .45em .75em; }
+.rh-doc img { max-width: 100%; height: auto; border-radius: .75rem; }
+.rh-doc hr { border: 0; border-top: 1px solid var(--ui-border); margin: 2em 0; }
+.rh-doc strong { color: var(--ui-text-highlighted); font-weight: 600; }
+
+/* IMDTabler table (markup from IMDTabler.jar) */
+.rh-imd table { border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.rh-imd td, .rh-imd th { border: 1px solid var(--ui-border); padding: .35em .6em; text-align: center; }
+.rh-imd th { background: var(--ui-bg-elevated); color: var(--ui-text-highlighted); font-weight: 600; }
+.rh-imd td[title] { cursor: help; }
+
+/* a horizontal strip that scrolls: fade the edge where more is out of view (the classes are set
+   from its scroll position); keyboard focus scrolls tabs clear of the fade */
+.rh-scroll-fade { --fade-start: 0px; --fade-end: 0px; scroll-padding-inline: 2rem; }
+.rh-scroll-fade.rh-fade-start { --fade-start: 2rem; }
+.rh-scroll-fade.rh-fade-end { --fade-end: 2rem; }
+.rh-scroll-fade:is(.rh-fade-start, .rh-fade-end) {
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+}
+[dir=rtl] .rh-scroll-fade:is(.rh-fade-start, .rh-fade-end) {
+  mask-image: linear-gradient(to left, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+}

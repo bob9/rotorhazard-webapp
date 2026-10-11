@@ -1,0 +1,1 @@
+function e(e){let t=String(e?.name??``).trim();return t.startsWith(`~`)?``:t}export{e as t};

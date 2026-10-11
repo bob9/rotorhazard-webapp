@@ -1,0 +1,1 @@
+import"./8s7yfeez.js";var e=globalThis.setInterval;export{e as t};

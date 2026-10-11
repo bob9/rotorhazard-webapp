@@ -1,0 +1,17 @@
+# build output and dependencies
+dist/
+ui/node_modules/
+ui/.nuxt/
+ui/.output/
+ui/.data/
+ui/.env
+ui/dist
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# RotorHazard checkout the tests clone when RH_SERVER_DIR is not set
+tests/.rotorhazard/

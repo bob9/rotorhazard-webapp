@@ -1,0 +1,1 @@
+import{_t as e}from"./Cpfm4dmu.js";function t(t){let n=t&&`$el`in t?t.$el:t;if(!n||typeof window>`u`)return;let r=window.matchMedia?.(`(prefers-reduced-motion: reduce)`).matches;e(()=>requestAnimationFrame(()=>n.scrollIntoView({block:`nearest`,behavior:r?`auto`:`smooth`})))}export{t};

@@ -1,0 +1,1 @@
+import{M as e}from"./Cpfm4dmu.js";import{u as t}from"./8s7yfeez.js";function n(){let n=t();return e(()=>n.path===`/live`&&n.query.kiosk!==void 0&&n.query.kiosk!==`0`)}export{n as t};

@@ -1,0 +1,67 @@
+name: Release
+
+# Builds the web app from source, checks it, and attaches the plugin zip
+# (rh_webapp.zip, the asset RotorHazard's plugin manager installs) to the release.
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  package:
+    name: Build and attach rh_webapp.zip
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v7.0.1
+
+      - name: 🏗 Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: 🔎 Check the release tag matches the manifest version
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('custom_plugins/rh_webapp/manifest.json'))['version'])")
+          [ "${TAG#v}" = "$version" ] || { echo "::error::Tag $TAG does not match manifest version $version"; exit 1; }
+
+      - name: 🏗 Build the web app and package the plugin
+        run: scripts/package.sh dist
+
+      - name: 🔎 Check the built app
+        run: |
+          set -e
+          test -f custom_plugins/rh_webapp/webapp/index.html
+          grep -q '/app/_rh/' custom_plugins/rh_webapp/webapp/index.html
+          ls custom_plugins/rh_webapp/webapp/_rh/*.js > /dev/null
+          python3 - <<'PY'
+          import zipfile
+          names = zipfile.ZipFile('dist/rh_webapp.zip').namelist()
+          for required in ('rh_webapp/manifest.json', 'rh_webapp/__init__.py', 'rh_webapp/webapp/index.html'):
+              assert required in names, required
+          assert all(n.startswith('rh_webapp/') for n in names)
+          print(len(names), 'files in rh_webapp.zip')
+          PY
+          # the committed build should match the source (warn only: hashes can differ between machines)
+          git diff --quiet --stat -- custom_plugins/rh_webapp/webapp || echo "::warning::The committed build differs from a fresh build of ui/"
+
+      - name: 📦 Upload the build as a workflow artifact
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: rh_webapp
+          path: dist/rh_webapp.zip
+
+      - name: 🚀 Attach rh_webapp.zip to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" dist/rh_webapp.zip --clobber

@@ -1,0 +1,22 @@
+name: RHFest
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *" # Every day at midnight
+
+jobs:
+  validation:
+    name: Validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v7.0.1
+
+      - name: 🚀 Run RHFest validation
+        uses: RotorHazard/rhfest-action@v3.2.3

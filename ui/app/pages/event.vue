@@ -6,7 +6,7 @@ const { t } = useI18n()
 useHead({ title: computed(() => t('Event')) })
 const { admin } = useAuth()
 const { info } = useServerInfo()
-rh.load(['frequency_data', 'pilot_data', 'class_data', 'format_data', 'heat_data', 'result_data', 'raceclass_rank_method_list'])
+rh.load(['frequency_data', 'pilot_data', 'class_data', 'format_data', 'heat_data', 'result_data', 'raceclass_rank_method_list', 'current_heat', 'seat_data'])
 
 const S = rh.state
 const fdata = computed<any[]>(() => S.frequency_data?.fdata || [])
@@ -30,6 +30,64 @@ watch(heatGroups, (g) => {
   if (!g.some(x => String(x.id) === groupTab.value)) groupTab.value = g.length ? String(g[0]!.id) : ''
 }, { immediate: true })
 const activeGroup = computed(() => heatGroups.value.find(g => String(g.id) === groupTab.value))
+const activeClass = computed(() => classes.value.find(c => String(c.id) === groupTab.value))
+
+// A class run in heat groups shows round by round, the way it is raced.
+const GROUPED = 1 // Database.RoundType.GROUPED
+const rounds = computed(() => {
+  const g = activeGroup.value
+  if (!g) return []
+  if (activeClass.value?.round_type !== GROUPED) return [{ round: null as number | null, heats: g.heats }]
+  const by = new Map<number, any[]>()
+  for (const h of g.heats) {
+    const r = (h.group_id ?? 0) + 1
+    if (!by.has(r)) by.set(r, [])
+    by.get(r)!.push(h)
+  }
+  return [...by.entries()].sort((a, b) => a[0] - b[0]).map(([round, heats]) => ({ round: round as number | null, heats }))
+})
+// Within a round: winners' races, then losers', then the rest, each in race
+// order — and labelled when a round has more than one side.
+function sideOf(h: any) {
+  return /^(Winners|Losers)\b/.exec(heatTitle(h))?.[1] || ''
+}
+const SIDE_ORDER: Record<string, number> = { Winners: 0, Losers: 1, '': 2 }
+function sides(hs: any[]) {
+  const sorted = [...hs].sort((a, b) => (SIDE_ORDER[sideOf(a)]! - SIDE_ORDER[sideOf(b)]!)
+    || heatTitle(a).localeCompare(heatTitle(b), undefined, { numeric: true }) || a.id - b.id)
+  const out: { side: string, heats: any[] }[] = []
+  for (const h of sorted) {
+    const side = sideOf(h)
+    if (!out.length || out[out.length - 1]!.side !== side) out.push({ side, heats: [] })
+    out[out.length - 1]!.heats.push(h)
+  }
+  return out.length > 1 ? out : [{ side: '', heats: sorted }]
+}
+const currentHeatId = computed(() => S.current_heat?.current_heat)
+const seatColors = computed<Record<number, string>>(() => Object.fromEntries((S.seat_data?.seats || []).map((s: any) => [s.seat_id, s.color])))
+// "Winners Round 1 — Race 3", not RotorHazard's "Round 1 / Winners Round 1 — Race 3"
+function heatTitle(h: any) {
+  return h.name || h.auto_name || h.displayname
+}
+function heatState(h: any): 'current' | 'done' | 'next' {
+  if (h.id === currentHeatId.value) return 'current'
+  if (h.locked) return 'done'
+  return 'next'
+}
+function roundProgress(hs: any[]) {
+  return hs.filter(h => h.locked).length
+}
+
+// Classes that are dd-pits brackets link to the bracket, when the dd-pits
+// plugin is installed: { "<class id>": { stage, url } }.
+const brackets = ref<Record<string, { stage: string, url: string }>>({})
+onMounted(async () => {
+  try {
+    const r = await fetch('/dd-pits/api/class-links')
+    if (r.ok) brackets.value = await r.json()
+  } catch { /* no dd-pits plugin */ }
+})
+const bracket = computed(() => brackets.value[groupTab.value])
 
 function slotText(h: any, s: any) {
   const p = pilots.value.find(x => x.pilot_id === s.pilot_id)
@@ -183,24 +241,74 @@ function setConsecutives(v: number) {
             class="max-w-full overflow-x-auto"
           />
           <UEmpty v-if="!heatGroups.length" icon="i-lucide-layers" :title="t('(no heats created)')" />
-          <div v-else-if="activeGroup" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="h in activeGroup.heats" :key="h.id" class="overflow-hidden rounded-2xl bg-default ring-1 ring-default">
-              <div class="border-b border-default px-4 py-2.5 font-semibold text-highlighted">
-                {{ h.displayname }}
-              </div>
-              <ul class="divide-y divide-default/70">
-                <li v-for="s in filled[h.id]" :key="s.id" class="flex items-center gap-3 px-4 py-2 text-sm">
-                  <span v-if="showChannel(h)" class="w-20 shrink-0 tabular text-xs text-muted">
-                    {{ seatLabel(h, s) }} <span v-if="fdata[s.node_index]?.band" class="text-dimmed">{{ fdata[s.node_index]?.frequency }}</span>
-                  </span>
-                  <span class="truncate font-medium text-highlighted">{{ slotText(h, s) }}</span>
-                </li>
-                <li v-if="!filled[h.id]?.length" class="px-4 py-2 text-sm text-dimmed">
-                  {{ t('No pilots assigned') }}
-                </li>
-              </ul>
+          <template v-else-if="activeGroup">
+            <div v-if="activeClass?.description || bracket" class="flex flex-wrap items-center gap-3">
+              <p v-if="activeClass?.description" class="text-sm text-muted">
+                {{ activeClass.description }}
+              </p>
+              <UButton
+                v-if="bracket"
+                :to="bracket.url"
+                external
+                size="sm"
+                icon="i-lucide-trophy"
+                trailing-icon="i-lucide-arrow-up-right"
+                color="primary"
+                variant="soft"
+                :label="t('Open bracket in dd-pits')"
+              />
             </div>
-          </div>
+            <div v-for="r in rounds" :key="String(r.round)" class="relative space-y-3" :class="r.round ? 'pl-5' : ''">
+              <!-- the round's rail: lit once all its heats are flown -->
+              <span
+                v-if="r.round"
+                class="absolute left-0 top-1 bottom-1 w-1 rounded-full"
+                :class="roundProgress(r.heats) === r.heats.length ? 'bg-primary' : r.heats.some((h: any) => heatState(h) === 'current') ? 'bg-primary/60' : 'bg-accented'"
+              />
+              <div v-if="r.round" class="flex flex-wrap items-baseline gap-3">
+                <h3 class="font-display text-xl font-semibold text-highlighted">
+                  {{ t('Round') }} {{ r.round }}
+                </h3>
+                <span class="text-sm tabular text-muted">{{ roundProgress(r.heats) }} / {{ r.heats.length }} {{ t('flown') }}</span>
+                <UBadge v-if="r.heats.some((h: any) => heatState(h) === 'current')" :label="t('Racing now')" color="primary" variant="subtle" size="sm" />
+              </div>
+              <div v-for="sd in sides(r.heats)" :key="sd.side" class="space-y-2">
+              <p v-if="sd.side" class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider" :class="sd.side === 'Winners' ? 'text-primary' : 'text-muted'">
+                <UIcon :name="sd.side === 'Winners' ? 'i-lucide-trending-up' : 'i-lucide-rotate-ccw'" class="size-3.5" />{{ t(sd.side) }}
+              </p>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div
+                  v-for="h in sd.heats"
+                  :key="h.id"
+                  class="overflow-hidden rounded-2xl bg-default ring-1 transition-shadow"
+                  :class="heatState(h) === 'current' ? 'ring-2 ring-primary shadow-lg shadow-primary/10' : heatState(h) === 'done' ? 'ring-default opacity-80' : 'ring-default'"
+                >
+                  <div
+                    class="flex items-start gap-2 border-b border-default px-4 py-2.5"
+                    :class="heatState(h) === 'current' ? 'bg-primary/10' : 'bg-elevated/40'"
+                  >
+                    <span class="min-w-0 flex-1 break-words font-semibold leading-snug text-highlighted">{{ heatTitle(h) }}</span>
+                    <UBadge v-if="heatState(h) === 'current'" :label="t('Current')" color="primary" variant="solid" size="sm" class="shrink-0" />
+                    <UBadge v-else-if="heatState(h) === 'done'" :label="t('Flown')" icon="i-lucide-check" color="neutral" variant="subtle" size="sm" class="shrink-0" />
+                  </div>
+                  <ul class="divide-y divide-default/60">
+                    <li v-for="s in filled[h.id]" :key="s.id" class="flex items-center gap-3 px-4 py-2 text-sm">
+                      <span class="h-5 w-1 shrink-0 rounded-full" :style="{ background: seatColors[s.node_index] || 'var(--ui-bg-accented)' }" />
+                      <span v-if="showChannel(h)" class="w-20 shrink-0 tabular text-xs text-muted">
+                        {{ seatLabel(h, s) }} <span v-if="fdata[s.node_index]?.band" class="text-dimmed">{{ fdata[s.node_index]?.frequency }}</span>
+                      </span>
+                      <span class="truncate font-medium text-highlighted">{{ slotText(h, s) }}</span>
+                    </li>
+                    <li v-if="!filled[h.id]?.length" class="flex items-center gap-2 px-4 py-3 text-sm text-dimmed">
+                      <UIcon name="i-lucide-hourglass" class="size-4" />
+                      {{ t('Pilots to come') }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              </div>
+            </div>
+          </template>
         </section>
 
         <!-- classes -->

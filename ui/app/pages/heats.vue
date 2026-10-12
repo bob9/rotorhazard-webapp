@@ -91,6 +91,19 @@ const advanceItems = computed(() => [
 ])
 const classLocked = ref(false)
 watch(cls, (c) => { classLocked.value = !!c?.locked }, { immediate: true })
+
+// Classes that are dd-pits brackets link back to the bracket, when the
+// dd-pits plugin is installed: { "<class id>": { stage, url } }.
+const brackets = ref<Record<string, { stage: string, url: string }>>({})
+async function loadBrackets() {
+  try {
+    const r = await fetch('/dd-pits/api/class-links')
+    if (r.ok) brackets.value = await r.json()
+  } catch { /* no dd-pits plugin */ }
+}
+onMounted(loadBrackets)
+watch(() => classes.value.length, loadBrackets)
+const bracket = computed(() => cls.value ? brackets.value[String(cls.value.id)] : undefined)
 // a locked setting reads as plain text, not as a greyed-out control that looks editable
 function itemLabel(items: any[], value: any) {
   return items.flat().find((i: any) => i?.value === value)?.label ?? '—'
@@ -237,6 +250,17 @@ const navItems = computed(() => [
                   :disabled="!admin"
                   :aria-label="t('Class name')"
                   @change="(e: any) => alterClass({ class_name: e.target.value })"
+                />
+                <UButton
+                  v-if="bracket"
+                  :to="bracket.url"
+                  external
+                  icon="i-lucide-trophy"
+                  trailing-icon="i-lucide-arrow-up-right"
+                  color="primary"
+                  variant="soft"
+                  class="mt-1.5 shrink-0"
+                  :label="t('Open bracket in dd-pits')"
                 />
                 <UDropdownMenu
                   v-if="admin"

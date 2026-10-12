@@ -90,6 +90,47 @@ function seedLabel(slot: any) {
   return ''
 }
 
+// Drag a pilot onto another seat to swap the two: the grip moves the pilot,
+// and the seat (channel) stays where it is. Pointer events, so it works on
+// touch screens too; listeners go on the document so the drag survives the
+// rows re-rendering under the pointer.
+const canDrag = computed(() => editable.value && !confirmed.value)
+const dragFrom = ref<number | null>(null)
+const dragOver = ref<number | null>(null)
+function slotAt(x: number, y: number) {
+  const el = document.elementFromPoint(x, y)?.closest('[data-slot-id]') as HTMLElement | null
+  if (!el || el.dataset.heatId !== String(props.heat.id)) return null
+  return Number(el.dataset.slotId)
+}
+function startDrag(e: PointerEvent, slot: any) {
+  if (!canDrag.value || !slot.pilot_id) return
+  e.preventDefault()
+  dragFrom.value = slot.id
+  dragOver.value = slot.id
+  const move = (ev: PointerEvent) => { dragOver.value = slotAt(ev.clientX, ev.clientY) }
+  const end = (ev: PointerEvent) => {
+    document.removeEventListener('pointermove', move)
+    document.removeEventListener('pointerup', end)
+    document.removeEventListener('pointercancel', end)
+    const to = ev.type === 'pointerup' ? slotAt(ev.clientX, ev.clientY) : null
+    const from = dragFrom.value
+    dragFrom.value = dragOver.value = null
+    if (to !== null && from !== null && to !== from) swapSlots(from, to)
+  }
+  document.addEventListener('pointermove', move)
+  document.addEventListener('pointerup', end)
+  document.addEventListener('pointercancel', end)
+}
+function swapSlots(fromId: number, toId: number) {
+  const a = (props.heat.slots || []).find((s: any) => s.id === fromId)
+  const b = (props.heat.slots || []).find((s: any) => s.id === toId)
+  if (!a || !b) return
+  const pa = a.pilot_id || 0
+  const pb = b.method > 0 ? 0 : (b.pilot_id || 0)
+  setSlot(b, { pilot: pa, method: 0 })
+  setSlot(a, pb ? { pilot: pb, method: 0 } : { pilot: 0, ...(a.method === 0 ? {} : { method: 0 }) })
+}
+
 const unlockOpen = ref(false)
 const deleteOpen = ref(false)
 const menu = computed(() => [
@@ -112,13 +153,14 @@ const menu = computed(() => [
     class="flex flex-col overflow-hidden rounded-2xl bg-default ring-1 transition-shadow"
     :class="[current ? 'ring-2 ring-primary shadow-md' : 'ring-default shadow-xs', heat.active === false ? 'opacity-55' : '']"
   >
-    <div class="flex items-center gap-2 border-b border-default px-3 py-2">
+    <div class="flex items-start gap-2 border-b border-default px-3 py-2">
       <!-- read-only and editable cards share the same metrics (32px name, 36px seat rows) -->
-      <span v-if="!editable" class="block h-8 min-w-0 flex-1 truncate px-1.5 text-[15px] font-semibold leading-8 text-highlighted">{{ heat.displayname }}</span>
+      <span v-if="!editable" class="block min-h-8 min-w-0 flex-1 break-words px-1.5 py-1 text-[15px] font-semibold leading-6 text-highlighted" :title="heat.displayname">{{ heat.displayname }}</span>
       <UInput
         v-else
         :model-value="heat.name || ''"
         :placeholder="heat.auto_name || heat.displayname"
+        :title="heat.name || heat.displayname"
         variant="ghost"
         class="min-w-0 flex-1"
         :ui="{ base: 'h-8 py-0 font-semibold text-highlighted text-[15px] md:text-[15px] px-1.5 placeholder:text-highlighted' }"
@@ -144,7 +186,25 @@ const menu = computed(() => [
     </div>
 
     <ul class="flex-1 divide-y divide-default/70">
-      <li v-for="slot in visibleSlots" :key="slot.id" class="flex min-h-9 items-center gap-2 px-3 py-1">
+      <li
+        v-for="slot in visibleSlots"
+        :key="slot.id"
+        :data-slot-id="slot.id"
+        :data-heat-id="heat.id"
+        class="flex min-h-9 items-center gap-2 px-3 py-1 transition-colors"
+        :class="dragFrom !== null && dragOver === slot.id && dragOver !== dragFrom ? 'bg-primary/15' : dragFrom === slot.id ? 'bg-elevated' : ''"
+      >
+        <button
+          v-if="canDrag"
+          type="button"
+          class="-ml-1 flex size-5 shrink-0 touch-none items-center justify-center rounded text-dimmed"
+          :class="slot.pilot_id ? 'cursor-grab hover:text-muted active:cursor-grabbing' : 'invisible'"
+          :aria-label="t('Drag to another channel')"
+          :title="t('Drag to another channel')"
+          @pointerdown="(e: PointerEvent) => startDrag(e, slot)"
+        >
+          <UIcon name="i-lucide-grip-vertical" class="size-4" />
+        </button>
         <div class="flex w-16 shrink-0 items-center gap-1.5">
           <span class="size-2.5 shrink-0 rounded-full" :style="{ background: seatColors[slot.node_index] || 'var(--ui-bg-accented)' }" />
           <span class="truncate text-xs tabular text-muted">{{ slotLabel(slot) }}</span>

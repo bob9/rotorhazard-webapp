@@ -6,7 +6,7 @@ const { t } = useI18n()
 useHead({ title: computed(() => t('Event')) })
 const { admin } = useAuth()
 const { info } = useServerInfo()
-rh.load(['frequency_data', 'pilot_data', 'class_data', 'format_data', 'heat_data', 'result_data', 'raceclass_rank_method_list', 'current_heat', 'seat_data'])
+rh.load(['frequency_data', 'pilot_data', 'class_data', 'format_data', 'heat_data', 'result_data', 'raceclass_rank_method_list', 'current_heat', 'seat_data', 'result_data'])
 
 const S = rh.state
 const fdata = computed<any[]>(() => S.frequency_data?.fdata || [])
@@ -73,6 +73,14 @@ function heatState(h: any): 'current' | 'done' | 'next' {
   if (h.id === currentHeatId.value) return 'current'
   if (h.locked) return 'done'
   return 'next'
+}
+// A flown heat's finishing order (its latest run, or the summary over several).
+function heatResult(h: any): any[] {
+  const r = S.result_data?.heats?.[h.id]
+  if (!r) return []
+  const runs = r.rounds || []
+  const lb = runs.length > 1 ? r.leaderboard : runs[runs.length - 1]?.leaderboard
+  return lb ? (lb[lb.meta?.primary_leaderboard || 'by_race_time'] || []).filter((x: any) => x.callsign) : []
 }
 function roundProgress(hs: any[]) {
   return hs.filter(h => h.locked).length
@@ -291,7 +299,17 @@ function setConsecutives(v: number) {
                     <UBadge v-if="heatState(h) === 'current'" :label="t('Current')" color="primary" variant="solid" size="sm" class="shrink-0" />
                     <UBadge v-else-if="heatState(h) === 'done'" :label="t('Flown')" icon="i-lucide-check" color="neutral" variant="subtle" size="sm" class="shrink-0" />
                   </div>
-                  <ul class="divide-y divide-default/60">
+                  <ol v-if="heatState(h) === 'done' && heatResult(h).length" class="divide-y divide-default/60">
+                    <li v-for="(r, i) in heatResult(h)" :key="r.pilot_id ?? i" class="flex items-center gap-3 px-4 py-2 text-sm">
+                      <span
+                        class="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular"
+                        :class="r.position === 1 ? 'bg-amber-400 text-amber-950' : r.position === 2 ? 'bg-zinc-300 text-zinc-900' : r.position === 3 ? 'bg-orange-600 text-orange-50' : 'bg-elevated text-muted'"
+                      >{{ r.position || '–' }}</span>
+                      <span class="min-w-0 flex-1 truncate font-medium" :class="r.position && r.position <= 3 ? 'text-highlighted' : 'text-muted'">{{ r.callsign }}</span>
+                      <span class="shrink-0 text-xs tabular text-muted">{{ r.laps }} · {{ r.total_time }}</span>
+                    </li>
+                  </ol>
+                  <ul v-else class="divide-y divide-default/60">
                     <li v-for="s in filled[h.id]" :key="s.id" class="flex items-center gap-3 px-4 py-2 text-sm">
                       <span class="h-5 w-1 shrink-0 rounded-full" :style="{ background: seatColors[s.node_index] || 'var(--ui-bg-accented)' }" />
                       <span v-if="showChannel(h)" class="w-20 shrink-0 tabular text-xs text-muted">

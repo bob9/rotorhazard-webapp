@@ -4,7 +4,7 @@ const { t } = useI18n()
 useHead({ title: computed(() => t('Heats')) })
 const { admin } = useAuth()
 const toast = useToast()
-rh.load(['heat_data', 'class_data', 'pilot_data', 'format_data', 'frequency_data', 'seat_data', 'current_heat', 'race_status', 'raceclass_rank_method_list', 'heatgenerator_list'])
+rh.load(['heat_data', 'class_data', 'pilot_data', 'format_data', 'frequency_data', 'seat_data', 'current_heat', 'race_status', 'raceclass_rank_method_list', 'heatgenerator_list', 'result_data'])
 
 const S = rh.state
 const heats = computed<any[]>(() => S.heat_data?.heats || [])
@@ -367,6 +367,7 @@ const navItems = computed(() => [
                     :admin="!!admin"
                     :current="h.id === currentHeatId"
                     :attributes="heatAttrs"
+                    :result="S.result_data?.heats?.[h.id]"
                   />
                 </div>
               </div>

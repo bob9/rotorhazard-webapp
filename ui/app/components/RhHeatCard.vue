@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** Editable heat: name, seats with pilots or seeding rules, status, plugin attributes. */
-const props = defineProps<{ heat: any, admin: boolean, current?: boolean, attributes?: any[], showRound?: boolean }>()
+const props = defineProps<{ heat: any, admin: boolean, current?: boolean, attributes?: any[], showRound?: boolean, result?: any }>()
 const emit = defineEmits<{ select: [] }>()
 const rh = useRH()
 const { t } = useI18n()
@@ -134,6 +134,19 @@ function swapSlots(fromId: number, toId: number) {
   setSlot(a, pb ? { pilot: pb, method: 0 } : { pilot: 0, ...(a.method === 0 ? {} : { method: 0 }) })
 }
 
+// A heat that has been raced shows its result (the latest run, or the
+// summary over several) until it's unlocked for editing.
+const resultRows = computed<any[]>(() => {
+  const r = props.result
+  if (!r) return []
+  const runs = r.rounds || []
+  const lb = runs.length > 1 ? r.leaderboard : runs[runs.length - 1]?.leaderboard
+  if (!lb) return []
+  return (lb[lb.meta?.primary_leaderboard || 'by_race_time'] || []).filter((x: any) => x.callsign)
+})
+const runs = computed(() => props.result?.rounds?.length || 0)
+const showResult = computed(() => locked.value && resultRows.value.length > 0)
+
 const unlockOpen = ref(false)
 const deleteOpen = ref(false)
 const menu = computed(() => [
@@ -159,16 +172,20 @@ const menu = computed(() => [
     <div class="flex items-start gap-2 border-b border-default px-3 py-2">
       <!-- read-only and editable cards share the same metrics (32px name, 36px seat rows) -->
       <span v-if="!editable" class="block min-h-8 min-w-0 flex-1 break-words px-1.5 py-1 text-[15px] font-semibold leading-6 text-highlighted" :title="heat.displayname">{{ title }}</span>
-      <UInput
+      <UTextarea
         v-else
         :model-value="heat.name || ''"
         :placeholder="heat.auto_name || title"
         :title="heat.name || heat.displayname"
         variant="ghost"
+        autoresize
+        :rows="1"
+        :maxrows="3"
         class="min-w-0 flex-1"
-        :ui="{ base: 'h-8 py-0 font-semibold text-highlighted text-[15px] md:text-[15px] px-1.5 placeholder:text-highlighted' }"
+        :ui="{ base: 'min-h-8 resize-none py-1 font-semibold leading-6 text-highlighted text-[15px] md:text-[15px] px-1.5 placeholder:text-highlighted' }"
         :disabled="!editable"
         :aria-label="t('Heat name')"
+        @keydown.enter.prevent="(e: any) => e.target.blur()"
         @change="(e: any) => alter({ name: e.target.value })"
       />
       <UTooltip v-if="locked && !admin" :text="t('Has saved races')">
@@ -188,7 +205,27 @@ const menu = computed(() => [
       <UButton size="xs" color="neutral" variant="outline" icon="i-lucide-lock-open" :label="t('Unlock')" @click="unlockOpen = true" />
     </div>
 
-    <ul class="flex-1 divide-y divide-default/70">
+    <div v-if="showResult" class="flex-1">
+      <ol class="divide-y divide-default/70">
+        <li v-for="(r, i) in resultRows" :key="r.pilot_id ?? i" class="flex min-h-9 items-center gap-2.5 px-3 py-1.5" :class="r.position > 3 || !r.position ? 'text-muted' : ''">
+          <span
+            class="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular"
+            :class="r.position === 1 ? 'bg-amber-400 text-amber-950' : r.position === 2 ? 'bg-zinc-300 text-zinc-900' : r.position === 3 ? 'bg-orange-600 text-orange-50' : 'bg-elevated text-muted'"
+          >{{ r.position || '–' }}</span>
+          <span class="size-2.5 shrink-0 rounded-full" :style="{ background: seatColors[r.node] || 'var(--ui-bg-accented)' }" />
+          <span class="min-w-0 flex-1 truncate text-sm font-medium" :class="r.position && r.position <= 3 ? 'text-highlighted' : ''">{{ r.callsign }}</span>
+          <span class="shrink-0 text-right text-xs tabular leading-tight">
+            <span class="block text-highlighted">{{ r.laps }} {{ r.laps === 1 ? t('lap') : t('laps') }} · {{ r.total_time }}</span>
+            <span v-if="r.fastest_lap && r.fastest_lap !== '0:00.000'" class="block text-dimmed">{{ t('Fastest') }} {{ r.fastest_lap }}</span>
+          </span>
+        </li>
+      </ol>
+      <div class="flex items-center justify-between gap-2 border-t border-default/70 px-4 py-2 text-xs text-dimmed">
+        <span>{{ runs > 1 ? `${runs} ${t('runs')} · ${t('summary')}` : t('Result') }}</span>
+        <NuxtLink to="/results" class="hover:text-highlighted">{{ t('Full results') }} →</NuxtLink>
+      </div>
+    </div>
+    <ul v-else class="flex-1 divide-y divide-default/70">
       <li
         v-for="slot in visibleSlots"
         :key="slot.id"
@@ -252,7 +289,7 @@ const menu = computed(() => [
       </li>
     </ul>
     <button
-      v-if="slotSplit.rest.length"
+      v-if="slotSplit.rest.length && !showResult"
       type="button"
       class="flex items-center gap-1.5 border-t border-default/70 px-4 py-2 text-left text-xs text-dimmed transition-colors hover:text-muted"
       :aria-expanded="showUnused"

@@ -231,17 +231,33 @@ watch(status, () => {
 const actionsEl = ref<HTMLElement | null>(null)
 const barEl = ref<HTMLElement | null>(null)
 const inControls = (el: Element | null) => !!el && (!!actionsEl.value?.contains(el) || !!barEl.value?.contains(el))
+function focusPrimary() {
+  const now = document.activeElement
+  const primary = [...document.querySelectorAll<HTMLElement>('[data-rh-primary]')]
+    .find(b => b.offsetParent !== null && !b.matches(':disabled'))
+  if (primary && primary !== now) primary.focus({ preventScroll: true })
+}
 watch(status, () => {
   const before = document.activeElement
   if (before && before !== document.body && !inControls(before)) return
   nextTick(() => {
     const now = document.activeElement
     if (now && now !== document.body && now !== before && !inControls(now)) return
-    const primary = [...document.querySelectorAll<HTMLElement>('[data-rh-primary]')]
-      .find(b => b.offsetParent !== null && !b.matches(':disabled'))
-    if (primary && primary !== now) primary.focus({ preventScroll: true })
+    focusPrimary()
   })
 })
+// Discard is confirmed in a dialog, which hands focus back to the Discard button that opened
+// it, and that button goes away as the race resets: once the dialog has closed, move focus to
+// the race's new primary action (unless another dialog has opened meanwhile)
+let focusAfterDiscard = false
+function onDiscardClosed() {
+  if (!focusAfterDiscard) return
+  focusAfterDiscard = false
+  // after the dialog's own focus hand-back, which runs once it has closed
+  setTimeout(() => {
+    if (!document.activeElement?.closest('[role=dialog]')) focusPrimary()
+  }, 0)
+}
 onBeforeUnmount(() => clearTimeout(busyTimer))
 function stop() {
   send('stop_race')
@@ -303,6 +319,7 @@ watch(heats, () => {
 function discard() {
   localResetAt = Date.now()
   rh.emit('discard_laps')
+  focusAfterDiscard = true
   discardOpen.value = false
 }
 function manualLap(seat: number) {
@@ -726,7 +743,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </div>
 
-      <UModal v-model:open="discardOpen" :title="t('Discard this race?')" :description="t('The laps from this race will be deleted and the timer reset.')">
+      <UModal v-model:open="discardOpen" @after:leave="onDiscardClosed" :title="t('Discard this race?')" :description="t('The laps from this race will be deleted and the timer reset.')">
         <template #footer="{ close }">
           <div class="flex w-full justify-end gap-2">
             <UButton color="neutral" variant="ghost" :label="t('Cancel')" @click="close" />

@@ -97,6 +97,24 @@ function itemLabel(items: any[], value: any) {
 }
 
 const deleteClassOpen = ref(false)
+// RotorHazard refuses, silently, to delete a class that has saved races: say so
+// rather than reporting a deletion that didn't happen
+function deleteClass(id: number) {
+  rh.emit('delete_class', { class: id })
+  const stop = watch(classes, (cs) => {
+    if (cs.some(c => c.id === id)) return
+    stop()
+    clearTimeout(timer)
+    toast.add({ title: t('Class deleted'), icon: 'i-lucide-trash-2' })
+    if (sel.value === String(id)) sel.value = ''
+  })
+  const timer = setTimeout(() => {
+    stop()
+    if (classes.value.some(c => c.id === id)) {
+      toast.add({ title: t('The class wasn\'t deleted'), description: t('RotorHazard keeps a class that has saved races.'), icon: 'i-lucide-circle-alert', color: 'error' })
+    }
+  }, 4000)
+}
 const rankSettingsOpen = ref(false)
 function saveRankSetting(name: string, value: any) {
   const rs = { ...(cls.value.ranksettings || {}), [name]: value }
@@ -385,14 +403,21 @@ const navItems = computed(() => [
         </template>
       </UModal>
 
-      <UModal v-model:open="deleteClassOpen" :title="t('Delete class?')" :description="cls ? `${cls.displayname} ${t('and its heats will be deleted.')}` : ''">
+      <UModal
+        v-model:open="deleteClassOpen"
+        :title="cls?.locked ? t('This class can\'t be deleted') : t('Delete class?')"
+        :description="!cls ? '' : cls.locked
+          ? t('It has saved races, and RotorHazard keeps a class that has raced so its results stay. Its heats can still be edited or removed.')
+          : `${cls.displayname} ${t('and its heats will be deleted.')}`"
+      >
         <template #footer="{ close }">
           <div class="flex w-full justify-end gap-2">
-            <UButton color="neutral" variant="ghost" :label="t('Cancel')" @click="close" />
+            <UButton color="neutral" variant="ghost" :label="cls?.locked ? t('Close') : t('Cancel')" @click="close" />
             <UButton
+              v-if="!cls?.locked"
               color="error"
               :label="t('Delete')"
-              @click="() => { rh.emit('delete_class', { class: cls.id }); toast.add({ title: t('Class deleted'), icon: 'i-lucide-trash-2' }); sel = ''; close() }"
+              @click="() => { deleteClass(cls.id); close() }"
             />
           </div>
         </template>

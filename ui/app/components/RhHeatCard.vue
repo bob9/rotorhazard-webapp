@@ -72,6 +72,9 @@ const slotSplit = computed(() => {
   }
   return { shown, rest }
 })
+// RotorHazard prefixes "Round N / " to a grouped heat's name; the Heats page
+// already shows each round under its own heading, so the card leaves it off.
+const title = computed(() => props.showRound ? props.heat.displayname : (props.heat.name || props.heat.auto_name || props.heat.displayname))
 const showUnused = ref(false)
 const UNUSED_LIMIT = 24
 const visibleSlots = computed(() => showUnused.value ? [...slotSplit.value.shown, ...slotSplit.value.rest.slice(0, UNUSED_LIMIT)] : slotSplit.value.shown)
@@ -155,11 +158,11 @@ const menu = computed(() => [
   >
     <div class="flex items-start gap-2 border-b border-default px-3 py-2">
       <!-- read-only and editable cards share the same metrics (32px name, 36px seat rows) -->
-      <span v-if="!editable" class="block min-h-8 min-w-0 flex-1 break-words px-1.5 py-1 text-[15px] font-semibold leading-6 text-highlighted" :title="heat.displayname">{{ heat.displayname }}</span>
+      <span v-if="!editable" class="block min-h-8 min-w-0 flex-1 break-words px-1.5 py-1 text-[15px] font-semibold leading-6 text-highlighted" :title="heat.displayname">{{ title }}</span>
       <UInput
         v-else
         :model-value="heat.name || ''"
-        :placeholder="heat.auto_name || heat.displayname"
+        :placeholder="heat.auto_name || title"
         :title="heat.name || heat.displayname"
         variant="ghost"
         class="min-w-0 flex-1"

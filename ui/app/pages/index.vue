@@ -140,7 +140,9 @@ const currentHeatId = computed<number | null>(() => view.value.heat?.current_hea
 const currentHeat = computed(() => heats.value.find(h => h.id === currentHeatId.value))
 const currentClass = computed(() => classes.value.find(c => c.id === currentHeat.value?.class_id))
 const currentFormat = computed(() => formats.value.find(f => f.id === S.race_status?.race_format_id))
-const heatName = computed(() => view.value.board?.current?.displayname || currentHeat.value?.displayname || t('Practice'))
+// The heat's own name: RotorHazard prefixes "Round N / " to grouped heats, and
+// the round already has its own badge underneath.
+const heatName = computed(() => currentHeat.value?.name || currentHeat.value?.auto_name || view.value.board?.current?.displayname || currentHeat.value?.displayname || t('Practice'))
 const round = computed(() => view.value.heat?.next_round || S.race_status?.next_round)
 
 const heatItems = computed(() => {
@@ -489,7 +491,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 >
                   <template #default>
                     <div class="min-w-0 text-left">
-                      <div class="truncate font-display text-2xl font-semibold text-highlighted sm:text-3xl">
+                      <div class="line-clamp-2 break-words font-display text-2xl font-semibold leading-tight text-highlighted sm:text-3xl" :title="heatName">
                         {{ heatName }}
                       </div>
                     </div>

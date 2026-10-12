@@ -7,6 +7,8 @@ const admin = ref<boolean | null>(null)
 const loginOpen = ref(false)
 // a page refused for lack of sign-in (set by the admin-pages middleware, shown by the layout)
 const refusedPath = ref<string | null>(null)
+// where to go once signed in: the refused page, with its query (a link to a heat)
+const returnTo = ref<string | null>(null)
 let inflight: Promise<boolean> | null = null
 
 function basicHeader(creds = readCredentials()): Record<string, string> {
@@ -74,5 +76,5 @@ export function useAuth() {
     }
   }
 
-  return { admin, loginOpen, refusedPath, refresh, login, logout, classicSession, hasCredentials: () => !!readCredentials() }
+  return { admin, loginOpen, refusedPath, returnTo, refresh, login, logout, classicSession, hasCredentials: () => !!readCredentials() }
 }

@@ -22,16 +22,32 @@ function validSel(v: string) {
   if (v === 'none') return unclassifiedCount.value > 0 || !classes.value.length
   return classes.value.some(c => String(c.id) === v)
 }
+// ?heat=<id> (a link from another page or plugin, e.g. a dd-pits bracket) opens that
+// heat's class and scrolls to the heat, outlined
+const focusHeat = computed(() => Number(route.query.heat) || 0)
 // once both heats and classes have arrived (in either order), pick: the ?class= query,
-// the class of the current heat, the first class, then unclassified
+// the ?heat= heat's class, the class of the current heat, the first class, then unclassified
 watch([() => !!S.class_data && !!S.heat_data, classes, heats, currentHeatId, sel], ([ready]) => {
   if (!ready || validSel(sel.value)) return
   const fromQuery = route.query.class ? String(route.query.class) : ''
+  const focusClass = heats.value.find(h => h.id === focusHeat.value)?.class_id
   const currentClass = heats.value.find(h => h.id === currentHeatId.value)?.class_id
-  const candidates = [fromQuery, currentClass ? String(currentClass) : '', ...classes.value.map(c => String(c.id)), 'none']
+  const candidates = [fromQuery, focusClass ? String(focusClass) : (focusHeat.value ? 'none' : ''),
+    currentClass ? String(currentClass) : '', ...classes.value.map(c => String(c.id)), 'none']
   sel.value = candidates.find(validSel) || 'none'
 }, { immediate: true })
 const cls = computed(() => classes.value.find(c => String(c.id) === sel.value) || null)
+// scroll to the ?heat= heat once its card is on the page (once per visit)
+let focused = false
+watch([() => focusHeat.value, sel, () => heats.value.length], () => {
+  if (focused || !focusHeat.value) return
+  nextTick(() => {
+    const el = document.getElementById(`heat-${focusHeat.value}`)
+    if (!el) return
+    focused = true
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+}, { immediate: true })
 const classHeats = computed(() => heats.value.filter(h => sel.value === 'none' ? !h.class_id : String(h.class_id) === sel.value))
 const grouped = computed(() => cls.value?.round_type === 1)
 const groups = computed(() => {
@@ -298,14 +314,19 @@ const navItems = computed(() => [
                 <UButton v-if="admin" size="sm" color="neutral" variant="soft" icon="i-lucide-plus" :label="t('Add Heat')" @click="addHeat(g.id)" />
               </div>
               <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <RhHeatCard
+                <div
                   v-for="h in g.heats"
+                  :id="`heat-${h.id}`"
                   :key="h.id"
-                  :heat="h"
-                  :admin="!!admin"
-                  :current="h.id === currentHeatId"
-                  :attributes="heatAttrs"
-                />
+                  :class="h.id === focusHeat ? 'rounded-lg ring-2 ring-primary ring-offset-2 ring-offset-default' : ''"
+                >
+                  <RhHeatCard
+                    :heat="h"
+                    :admin="!!admin"
+                    :current="h.id === currentHeatId"
+                    :attributes="heatAttrs"
+                  />
+                </div>
               </div>
             </section>
           </template>

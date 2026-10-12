@@ -24,7 +24,7 @@ const raceLive = computed(() => [1, 3].includes(rh.state.race_status?.race_statu
 
 // admin-only pages (utils/adminPages.ts): the route middleware sends guests to Live before
 // the page renders; this says why, and also covers signing out while on such a page
-const { refusedPath } = useAuth()
+const { refusedPath, returnTo } = useAuth()
 const toast = useToast()
 function offerSignIn() {
   toast.add({
@@ -41,6 +41,13 @@ watch(refusedPath, (p) => {
   offerSignIn()
 }, { immediate: true })
 watch(admin, (isAdmin) => {
+  // signed in after being refused a page: open the page that was asked for
+  if (isAdmin === true && returnTo.value) {
+    const to = returnTo.value
+    returnTo.value = null
+    navigateTo(to)
+    return
+  }
   if (isAdmin !== false || !isAdminPage(route.path)) return
   navigateTo('/live', { replace: true })
   offerSignIn()

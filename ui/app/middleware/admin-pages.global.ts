@@ -4,9 +4,10 @@
  */
 export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server || !isAdminPage(to.path)) return
-  const { admin, refresh, refusedPath } = useAuth()
+  const { admin, refresh, refusedPath, returnTo } = useAuth()
   const ok = admin.value ?? await refresh()
   if (ok) return
   refusedPath.value = to.path
+  returnTo.value = to.fullPath
   return navigateTo('/live', { replace: true })
 })

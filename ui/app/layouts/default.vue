@@ -387,7 +387,8 @@ onMounted(() => {
 })
 onBeforeUnmount(() => { topRO?.disconnect(); clearTimeout(topTimer); clearTimeout(noBarTimer) })
 
-const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
+// RotorHazard's own copy of its icon: the plugin doesn't redistribute the branding
+const logoUrl = '/static/image/RotorHazard Icon.svg'
 const version = computed(() => info.value?.server?.release_version)
 </script>
 

@@ -56,7 +56,7 @@ async function finish() {
   step.value = 2
 }
 
-const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
+const logoUrl = '/static/image/RotorHazard Icon.svg'
 </script>
 
 <template>

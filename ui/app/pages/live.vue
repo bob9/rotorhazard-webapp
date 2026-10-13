@@ -9,7 +9,7 @@ const audio = useAudio()
 const route = useRoute()
 const router = useRouter()
 const { info } = useServerInfo()
-const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
+const logoUrl = '/static/image/RotorHazard Icon.svg'
 rh.load(['race_status', 'current_heat', 'current_laps', 'leaderboard', 'frequency_data', 'pilot_data', 'min_lap', 'format_data', 'seat_data'])
 
 const S = rh.state

@@ -9,7 +9,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(HERE, 'art')
 OUT = os.path.join(HERE, 'public', 'img')
-MAX_WIDTH = {'welcome': 2000, 'signin': 1000, 'race-hero': 2000, 'results-hero': 2000}
+MAX_WIDTH = {'welcome': 2000, 'results-hero': 2000}
 
 for name in sorted(os.listdir(SRC)):
     base, _ = os.path.splitext(name)

@@ -472,7 +472,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <div v-else class="mx-auto w-full max-w-[1600px] space-y-6 p-4 pb-28 sm:p-6 sm:pb-28 lg:pb-6">
         <!-- Race control -->
         <section class="relative overflow-hidden rounded-3xl bg-default ring-1 ring-default shadow-sm">
-          <RhArt name="race-hero" class="pointer-events-none absolute inset-0 hidden size-full object-cover dark:block dark:opacity-15" />
           <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent" />
           <div class="relative grid grid-cols-1 items-center gap-6 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <!-- heat -->
@@ -564,6 +563,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 @click="save"
               />
               <div class="flex justify-center gap-1 lg:justify-end">
+                <RhRaceSchedule v-if="isReady" size="sm" />
                 <UButton
                   v-if="isDone"
                   color="neutral"
@@ -668,6 +668,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           :style="dockReserve ? { minHeight: `${dockReserve}px` } : undefined"
         />
 
+        <!-- used during every race: shown as they are, not behind tabs -->
+        <RhAnnounce />
+        <RhPluginPanels page="run" columns />
+
         <RhRaceTools />
       </div>
 
@@ -701,6 +705,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             :label="t('Stop and Save')"
             @click="save"
           />
+          <RhRaceSchedule v-if="isReady" icon-only />
           <UButton
             v-if="isReady"
             data-rh-primary

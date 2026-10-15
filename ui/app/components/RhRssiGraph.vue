@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
- * RSSI graph with EnterAt / ExitAt lines. Live mode streams heartbeat values
- * for one node; static mode draws a recorded history (marshaling). Lines can
- * be dragged when `editable`.
+ * RSSI graph with EnterAt / ExitAt lines. Live mode scrolls one node's recent
+ * signal (the last `windowSec`, from useRssiHistory, so it opens with history
+ * already drawn; `axis` labels the seconds); static mode draws a recorded
+ * history (marshaling). Lines can be dragged when `editable`.
  *
  * Static mode extras: `domain` fixes the time range (defaults to the history's
  * span), `origin` adds a seconds axis relative to that time, `regions` shades
@@ -25,13 +26,13 @@ const props = withDefaults(defineProps<{
   domain?: [number, number] | null
   origin?: number | null
   regions?: { from: number, to: number }[]
+  axis?: boolean
 }>(), { height: 220, windowSec: 20, color: '#fe5d11' })
 const emit = defineEmits<{ 'update:enterAt': [number], 'update:exitAt': [number], 'commit': [], 'seek': [number] }>()
 
-const rh = useRH()
 const canvas = ref<HTMLCanvasElement>()
 const wrap = ref<HTMLDivElement>()
-const live: { t: number, v: number, c: boolean }[] = []
+const rssiHistory = useRssiHistory()
 let raf = 0
 let dragging: 'enter' | 'exit' | null = null
 // static mode: a press becomes a drag only once it moves, otherwise it is a tap
@@ -40,15 +41,17 @@ let hoverX: number | null = null
 
 const AXIS_H = 20
 
-if (props.node !== undefined && !props.history) {
-  rh.on('heartbeat', (d: any) => {
-    if (props.paused) return
-    const v = d?.current_rssi?.[props.node!]
-    if (v === undefined) return
-    live.push({ t: performance.now(), v, c: !!d.crossing_flag?.[props.node!] })
-    const cutoff = performance.now() - props.windowSec * 1000 - 1000
-    while (live.length && live[0]!.t < cutoff) live.shift()
-  })
+// live mode: recording carries on while paused; the view stays at the moment of pausing
+let pausedAt: number | null = null
+watch(() => props.paused, (p) => { pausedAt = p ? performance.now() : null }, { immediate: true })
+function liveNow() {
+  return pausedAt ?? performance.now()
+}
+function livePoints() {
+  if (props.node === undefined) return []
+  const now = liveNow()
+  const from = now - props.windowSec * 1000 - 1000
+  return rssiHistory.series(props.node).filter(p => p.t >= from && p.t <= now)
 }
 
 function css(name: string) {
@@ -56,7 +59,7 @@ function css(name: string) {
 }
 
 function range() {
-  const vals = props.history ? props.history.values : live.map(p => p.v)
+  const vals = props.history ? props.history.values : livePoints().map(p => p.v)
   let max = props.enterAt || 0
   let min = props.exitAt ?? 0
   for (const v of vals) {
@@ -70,7 +73,7 @@ function range() {
 }
 
 const isStatic = computed(() => !!props.history)
-const hasAxis = computed(() => isStatic.value && props.origin !== null && props.origin !== undefined)
+const hasAxis = computed(() => isStatic.value ? props.origin !== null && props.origin !== undefined : !!props.axis)
 function plotHeight() {
   return props.height - (hasAxis.value ? AXIS_H : 0)
 }
@@ -239,12 +242,48 @@ function draw() {
       ctx.fillText(text, bx + 5, h - 9)
     }
   } else {
-    const now = performance.now()
-    pts = live.map(p => ({ x: w - ((now - p.t) / (props.windowSec * 1000)) * w, y: y(p.v), c: p.c }))
+    const now = liveNow()
+    const winMs = props.windowSec * 1000
+    const X = (t: number) => w - ((now - t) / winMs) * w
+    const live = livePoints()
     // crossing bands
     ctx.fillStyle = props.color + '22'
-    for (let i = 0; i < pts.length - 1; i++) {
-      if (pts[i]!.c) ctx.fillRect(pts[i]!.x, 0, pts[i + 1]!.x - pts[i]!.x + 0.5, h)
+    for (let i = 0; i < live.length - 1; i++) {
+      if (live[i]!.c) ctx.fillRect(X(live[i]!.t), 0, X(live[i + 1]!.t) - X(live[i]!.t) + 0.5, h)
+    }
+    // a long window has more readings than pixels: keep each pixel's highest (passes are peaks)
+    if (live.length > w * 2) {
+      const cols = new Map<number, number>()
+      for (const p of live) {
+        const col = Math.round(X(p.t))
+        cols.set(col, Math.max(cols.get(col) ?? 0, p.v))
+      }
+      pts = [...cols].map(([x, v]) => ({ x, y: y(v) }))
+    } else {
+      pts = live.map(p => ({ x: X(p.t), y: y(p.v) }))
+    }
+    // seconds before now
+    if (hasAxis.value) {
+      const step = niceStep(props.windowSec, w)
+      ctx.font = '500 10px -apple-system, system-ui, sans-serif'
+      ctx.fillStyle = css('--ui-text-dimmed') || '#999'
+      ctx.strokeStyle = border
+      ctx.textAlign = 'center'
+      for (let s = step; s < props.windowSec; s += step) {
+        const x = Math.round(w - (s / props.windowSec) * w) + 0.5
+        ctx.beginPath()
+        ctx.moveTo(x, h)
+        ctx.lineTo(x, h + 4)
+        ctx.stroke()
+        const m = Math.floor(s / 60)
+        const label = m ? `−${m}:${String(s % 60).padStart(2, '0')}` : `−${s}s`
+        if (x > 16 && x < w - 16) ctx.fillText(label, x, h + 15)
+      }
+      ctx.textAlign = 'start'
+      ctx.beginPath()
+      ctx.moveTo(0, h + 0.5)
+      ctx.lineTo(w, h + 0.5)
+      ctx.stroke()
     }
   }
 

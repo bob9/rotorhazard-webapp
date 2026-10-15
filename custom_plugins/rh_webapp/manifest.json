@@ -8,7 +8,7 @@
     "info_uri": "https://github.com/bob9/rotorhazard-webapp",
     "license": "MIT NON-AI",
     "license_uri": "https://github.com/bob9/rotorhazard-webapp/blob/main/LICENSE",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "required_rhapi_version": "1.3",
     "zip_filename": "rh_webapp.zip"
 }

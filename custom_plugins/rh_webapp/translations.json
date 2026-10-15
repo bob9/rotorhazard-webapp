@@ -696,7 +696,8 @@
    "Start the race in": "Rennen starten in",
    "Edit Callouts": "Ansagen bearbeiten",
    "History": "Verlauf",
-   "Add callouts to play them here with one tap.": "Füge Ansagen hinzu, um sie hier mit einem Tippen abzuspielen."
+   "Add callouts to play them here with one tap.": "Füge Ansagen hinzu, um sie hier mit einem Tippen abzuspielen.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Ziehe die Linien, um EnterAt und ExitAt zu ändern. Klicke auf eine Runde, um sie hervorzuheben, oder an eine andere Stelle, um eine Zeit für eine manuelle Runde zu wählen."
   }
  },
  "es": {
@@ -1396,7 +1397,8 @@
    "Start the race in": "Iniciar la carrera en",
    "Edit Callouts": "Editar llamadas",
    "History": "Historial",
-   "Add callouts to play them here with one tap.": "Añade llamadas para reproducirlas aquí con un toque."
+   "Add callouts to play them here with one tap.": "Añade llamadas para reproducirlas aquí con un toque.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Arrastre las líneas para cambiar EnterAt y ExitAt. Haga clic en una vuelta para resaltarla, o en cualquier otro punto para elegir el tiempo de una vuelta manual."
   }
  },
  "fr-be": {
@@ -2096,7 +2098,8 @@
    "Start the race in": "Lancer la course dans",
    "Edit Callouts": "Modifier les annonces",
    "History": "Historique",
-   "Add callouts to play them here with one tap.": "Ajoutez des annonces pour les lire ici d’un simple toucher."
+   "Add callouts to play them here with one tap.": "Ajoutez des annonces pour les lire ici d’un simple toucher.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Faites glisser les lignes pour modifier EnterAt et ExitAt. Cliquez sur un tour pour le mettre en évidence, ou ailleurs pour choisir le temps d'un tour manuel."
   }
  },
  "it": {
@@ -2793,7 +2796,8 @@
    "Start the race in": "Avvia la gara tra",
    "Edit Callouts": "Modifica chiamate",
    "History": "Cronologia",
-   "Add callouts to play them here with one tap.": "Aggiungi chiamate per riprodurle qui con un tocco."
+   "Add callouts to play them here with one tap.": "Aggiungi chiamate per riprodurle qui con un tocco.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Trascina le linee per cambiare EnterAt ed ExitAt. Clicca un giro per evidenziarlo, oppure clicca altrove per scegliere il tempo di un giro manuale."
   }
  },
  "nl-be": {
@@ -3492,7 +3496,8 @@
    "Start the race in": "Start de race over",
    "Edit Callouts": "Aankondigingen bewerken",
    "History": "Geschiedenis",
-   "Add callouts to play them here with one tap.": "Voeg aankondigingen toe om ze hier met één tik af te spelen."
+   "Add callouts to play them here with one tap.": "Voeg aankondigingen toe om ze hier met één tik af te spelen.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Versleep de lijnen om EnterAt en ExitAt te wijzigen. Klik op een lap om ze aan te duiden, of klik ergens anders om een tijd te kiezen voor een manuele lap."
   }
  },
  "pl": {
@@ -4191,7 +4196,8 @@
    "Start the race in": "Rozpocznij wyścig za",
    "Edit Callouts": "Edytuj komunikaty",
    "History": "Historia",
-   "Add callouts to play them here with one tap.": "Dodaj komunikaty, aby odtwarzać je tutaj jednym dotknięciem."
+   "Add callouts to play them here with one tap.": "Dodaj komunikaty, aby odtwarzać je tutaj jednym dotknięciem.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Przeciągnij linie, aby zmienić Wlot i Wylot. Kliknij okrążenie, aby je podświetlić, lub kliknij w innym miejscu, aby wybrać czas ręcznego okrążenia."
   }
  },
  "ja-JP": {
@@ -4890,7 +4896,8 @@
    "Start the race in": "レース開始まで",
    "Edit Callouts": "読み上げを編集",
    "History": "履歴",
-   "Add callouts to play them here with one tap.": "読み上げを追加すると、ここからワンタップで再生できます。"
+   "Add callouts to play them here with one tap.": "読み上げを追加すると、ここからワンタップで再生できます。",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "ラインをドラッグして EnterAt と ExitAt を変更できます。ラップをクリックするとハイライトされ、それ以外の場所をクリックすると手動ラップの時刻を指定できます。"
   }
  },
  "zh-CN": {
@@ -5588,7 +5595,8 @@
    "Start the race in": "比赛开始倒计时",
    "Edit Callouts": "编辑播报",
    "History": "历史",
-   "Add callouts to play them here with one tap.": "添加播报后，即可在此一键播放。"
+   "Add callouts to play them here with one tap.": "添加播报后，即可在此一键播放。",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "拖动线条以更改进入值和离开值。点击某一圈将其高亮，或点击其他位置为手动计圈选择时间。"
   }
  },
  "ru": {
@@ -6286,7 +6294,8 @@
    "Start the race in": "Старт гонки через",
    "Edit Callouts": "Изменить объявления",
    "History": "История",
-   "Add callouts to play them here with one tap.": "Добавьте объявления, чтобы воспроизводить их здесь одним нажатием."
+   "Add callouts to play them here with one tap.": "Добавьте объявления, чтобы воспроизводить их здесь одним нажатием.",
+   "Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.": "Перетащите линии, чтобы изменить «Влёт» и «Вылет». Нажмите на круг, чтобы выделить его, или в любом другом месте, чтобы выбрать время для ручного круга."
   }
  }
 }

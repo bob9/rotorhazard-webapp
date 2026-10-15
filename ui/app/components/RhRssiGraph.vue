@@ -3,7 +3,8 @@
  * RSSI graph with EnterAt / ExitAt lines. Live mode scrolls one node's recent
  * signal (the last `windowSec`, from useRssiHistory, so it opens with history
  * already drawn; `axis` labels the seconds); static mode draws a recorded
- * history (marshaling). Lines can be dragged when `editable`.
+ * history (marshaling). Lines can be dragged when `editable`: grab a line (or
+ * its label) to move it; in static mode a press anywhere else is a tap.
  *
  * Static mode extras: `domain` fixes the time range (defaults to the history's
  * span), `origin` adds a seconds axis relative to that time, `regions` shades
@@ -36,7 +37,9 @@ const rssiHistory = useRssiHistory()
 let raf = 0
 let dragging: 'enter' | 'exit' | null = null
 // static mode: a press becomes a drag only once it moves, otherwise it is a tap
-let press: { x: number, y: number, which: 'enter' | 'exit', enter?: number, exit?: number } | null = null
+let press: { x: number, y: number, enter?: number, exit?: number } | null = null
+// the line under the pointer, highlighted and given the resize cursor
+const hoverLine = ref<'enter' | 'exit' | null>(null)
 let hoverX: number | null = null
 
 const AXIS_H = 20
@@ -315,7 +318,8 @@ function draw() {
     if (v === undefined || v === null) return
     const yy = Math.round(y(v)) + 0.5
     ctx.strokeStyle = col
-    ctx.lineWidth = dragging && label.startsWith(dragging === 'enter' ? 'Enter' : 'Exit') ? 2.5 : 1.5
+    const active = dragging ?? hoverLine.value
+    ctx.lineWidth = active && label.startsWith(active === 'enter' ? 'Enter' : 'Exit') ? 2.5 : 1.5
     ctx.setLineDash([6, 4])
     ctx.beginPath()
     ctx.moveTo(0, yy)
@@ -347,18 +351,33 @@ function timeAt(e: PointerEvent) {
   return t0 + Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)) * (t1 - t0)
 }
 
+// the EnterAt / ExitAt line within reach of the pointer (a finger gets more room than a mouse)
+function lineNear(e: PointerEvent): 'enter' | 'exit' | null {
+  if (!props.editable) return null
+  const rect = canvas.value!.getBoundingClientRect()
+  const py = e.clientY - rect.top
+  const { lo, hi } = range()
+  const h = plotHeight()
+  const dist = (v?: number) => (v === undefined || v === null ? Infinity : Math.abs(py - (h - ((v - lo) / (hi - lo)) * h)))
+  const de = dist(props.enterAt)
+  const dx = dist(props.exitAt)
+  if (Math.min(de, dx) > (e.pointerType === 'mouse' ? 8 : 18)) return null
+  return de <= dx ? 'enter' : 'exit'
+}
+
 function down(e: PointerEvent) {
   if (e.button > 0) return
-  const v = valueAt(e)
-  const mid = ((props.enterAt || 0) + (props.exitAt || 0)) / 2
-  const which = v >= mid ? 'enter' : 'exit'
   canvas.value!.setPointerCapture(e.pointerId)
+  const near = lineNear(e)
   if (isStatic.value) {
-    press = { x: e.clientX, y: e.clientY, which, enter: props.enterAt, exit: props.exitAt }
+    press = { x: e.clientX, y: e.clientY, enter: props.enterAt, exit: props.exitAt }
+    dragging = near
     return
   }
   if (!props.editable) return
-  dragging = which
+  // live tuning: a press anywhere moves the nearer line
+  const mid = ((props.enterAt || 0) + (props.exitAt || 0)) / 2
+  dragging = near ?? (valueAt(e) >= mid ? 'enter' : 'exit')
   move(e)
 }
 function move(e: PointerEvent) {
@@ -366,7 +385,7 @@ function move(e: PointerEvent) {
     const rect = canvas.value!.getBoundingClientRect()
     hoverX = e.clientX - rect.left
   }
-  if (press && !dragging && props.editable && Math.abs(e.clientY - press.y) > 4) dragging = press.which
+  hoverLine.value = dragging ?? lineNear(e)
   if (!dragging) return
   let v = valueAt(e)
   if (dragging === 'enter') {
@@ -382,6 +401,7 @@ function up(e: PointerEvent) {
   else if (press && Math.abs(e.clientX - press.x) < 6 && Math.abs(e.clientY - press.y) < 6) emit('seek', timeAt(e))
   dragging = null
   press = null
+  if (e.pointerType !== 'mouse') hoverLine.value = null
 }
 function cancel() {
   // live tuning keeps what was dragged; marshaling reverts an unfinished drag (as the classic page does)
@@ -392,9 +412,11 @@ function cancel() {
   }
   dragging = null
   press = null
+  hoverLine.value = null
 }
 function leave() {
   hoverX = null
+  if (!dragging) hoverLine.value = null
 }
 
 onMounted(() => { raf = requestAnimationFrame(draw) })
@@ -406,7 +428,7 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
     <canvas
       ref="canvas"
       class="block touch-none"
-      :class="editable ? 'cursor-ns-resize' : isStatic ? 'cursor-crosshair' : ''"
+      :class="hoverLine || (editable && !isStatic) ? 'cursor-ns-resize' : isStatic ? 'cursor-crosshair' : ''"
       @pointerdown="down"
       @pointermove="move"
       @pointerup="up"

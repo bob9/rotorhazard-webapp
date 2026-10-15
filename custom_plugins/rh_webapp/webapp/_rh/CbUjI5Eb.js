@@ -1,0 +1,1 @@
+import{Hn as e,M as t}from"./Cpfm4dmu.js";import{L as n}from"./hjrS6pvN.js";function r(r){return t(()=>!e(r)||!!n(r)?.closest(`form`))}export{r as t};

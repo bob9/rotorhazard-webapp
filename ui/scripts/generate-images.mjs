@@ -31,17 +31,6 @@ export const IMAGES = {
       + 'and magenta LEDs, a racing quad drone streaking through the nearest gate leaving soft light trails, '
       + 'deep blue dusk sky, distant tree line. ' + STYLE
   },
-  'signin': {
-    aspect: '16:9',
-    prompt: 'Close-up of a single unbranded 5-inch FPV racing quadcopter resting on a dark matte surface: plain '
-      + 'carbon fiber frame, plain black motors, orange propellers, no battery labels, rim light in warm orange, '
-      + 'the rest falling into darkness. ' + STYLE
-  },
-  'race-hero': {
-    aspect: '21:9',
-    prompt: 'Abstract long-exposure light trails of racing drones looping through gates at night, orange and '
-      + 'red streaks on a near-black background, very subtle and dark so text can sit on top. ' + STYLE
-  },
   'results-hero': {
     aspect: '21:9',
     prompt: 'Wide banner photo of a grass race field at golden hour: one small unbranded FPV racing drone resting on '

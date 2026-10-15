@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<{
   finished?: boolean
   minLapMs?: number
   stopped?: boolean
-  /** show the signal (RSSI) meter; off on the spectator view */
+  /** show the signal (RSSI) over the last seconds; off on the spectator view */
   showSignal?: boolean
   /** name, laps, last and fastest only (presentation mode): no lap list, same height all race */
   compact?: boolean
@@ -41,10 +41,6 @@ function lapTimeText(lap: any) {
 // on phones the Last/Fastest grid and lap list collapse into a one-line summary
 const expanded = ref(false)
 const lapCount = computed(() => props.row?.laps ?? (props.laps || []).filter(l => !l.deleted && l.lap_number > 0).length)
-
-// signal meter scaled to the node's enter level with headroom
-const scaleMax = computed(() => Math.max((props.enterAt || 100) * 1.35, (props.rssi || 0) + 5, 60))
-const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.value) * 100))}%`
 </script>
 
 <template>
@@ -95,14 +91,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
       :disabled="!admin"
       @click="emit('tune')"
     >
-      <div class="relative h-2 overflow-hidden rounded-full bg-accented/70">
-        <div
-          class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-150 ease-out"
-          :style="{ width: pct(rssi), background: crossing ? color : 'var(--ui-text-dimmed)' }"
-        />
-        <div v-if="exitAt" class="absolute inset-y-0 w-px bg-warning/80" :style="{ left: pct(exitAt) }" />
-        <div v-if="enterAt" class="absolute inset-y-0 w-px bg-error/80" :style="{ left: pct(enterAt) }" />
-      </div>
+      <RhRssiSpark :node="seat" :enter-at="enterAt" :exit-at="exitAt" :color="color" />
       <div class="mt-1 flex justify-between text-[11px] text-dimmed tabular">
         <span>{{ crossing ? t('Crossing') : t('Signal') }} {{ rssi ?? 0 }}</span>
         <span v-if="admin" class="transition-opacity" :class="stopped ? 'text-primary' : 'opacity-0 group-hover:opacity-100'">{{ stopped ? t('Edit laps') : t('Tune') }} →</span>

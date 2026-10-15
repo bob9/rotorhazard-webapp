@@ -25,11 +25,7 @@ async function submit() {
 <template>
   <UModal v-model:open="loginOpen" :ui="{ content: 'max-w-sm divide-y-0 overflow-hidden' }">
     <template #content>
-      <div class="relative h-32 overflow-hidden rounded-t-[inherit] bg-neutral-950">
-        <RhArt name="signin" class="absolute inset-0 size-full object-cover" />
-        <div class="absolute inset-0 bg-gradient-to-t from-(--ui-bg) via-transparent to-transparent" />
-      </div>
-      <form class="-mt-8 relative space-y-5 p-6 pt-0" @submit.prevent="submit">
+      <form class="space-y-5 bg-gradient-to-b from-primary/[0.07] to-transparent to-40% p-6 pt-8" @submit.prevent="submit">
         <div class="flex flex-col items-center gap-3 text-center">
           <div class="flex size-14 items-center justify-center rounded-2xl bg-primary/10">
             <UIcon name="i-lucide-lock-keyhole" class="size-7 text-primary" />

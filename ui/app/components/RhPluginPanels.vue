@@ -6,7 +6,8 @@
  */
 import type { Directive } from 'vue'
 
-const props = defineProps<{ page: string, title?: string }>()
+/** `columns`: lay panels out in two columns on wide screens (the Race page) */
+const props = defineProps<{ page: string, title?: string, columns?: boolean }>()
 const rh = useRH()
 const { t } = useI18n()
 const { admin } = useAuth()
@@ -31,9 +32,16 @@ const panels = computed(() => panelsFor(props.page)
   }))
   .filter((p: any) => admin.value === true || p.markdowns?.length))
 
+// collapsed panels are remembered on this device
+const COLLAPSED_KEY = 'rh.collapsedPanels'
 const openState = ref<Record<string, boolean>>({})
+try { openState.value = JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '{}') } catch { /* storage unavailable */ }
 function isOpen(p: any) {
   return openState.value[p.panel.name] ?? true
+}
+function toggle(p: any) {
+  openState.value[p.panel.name] = !isOpen(p)
+  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify(openState.value)) } catch { /* storage unavailable */ }
 }
 function isEmptyPanel(p: any) {
   return !p.markdowns?.length && !p.settings.length && !p.fn_binds.length && !p.quickbuttons.length
@@ -78,8 +86,8 @@ function isBlankPanel(p: any) {
 </script>
 
 <template>
-  <div v-if="panels.length" class="space-y-8">
-    <h2 v-if="title" class="font-display text-xl font-semibold">
+  <div v-if="panels.length" :class="columns ? 'gap-6 xl:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid [&>*:last-child]:mb-0' : 'space-y-8'">
+    <h2 v-if="title" class="font-display text-xl font-semibold" :class="{ 'xl:[column-span:all]': columns }">
       {{ title }}
     </h2>
     <RhGroup
@@ -96,7 +104,7 @@ function isBlankPanel(p: any) {
           size="xs"
           :icon="isOpen(p) ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
           :aria-label="isOpen(p) ? 'Collapse' : 'Expand'"
-          @click="openState[p.panel.name] = !isOpen(p)"
+          @click="toggle(p)"
         />
       </template>
       <!-- collapsed panels stay mounted (v-show) so their loader scripts keep running -->

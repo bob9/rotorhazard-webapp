@@ -691,7 +691,12 @@
    "Select a race to adjust its EnterAt and ExitAt": "Wähle ein Rennen, um dessen EnterAt- und ExitAt-Werte anzupassen",
    "Tip": "Tipp",
    "Warning": "Warnung",
-   "Skip to content": "Zum Inhalt springen"
+   "Skip to content": "Zum Inhalt springen",
+   "Cancel Start": "Start abbrechen",
+   "Start the race in": "Rennen starten in",
+   "Edit Callouts": "Ansagen bearbeiten",
+   "History": "Verlauf",
+   "Add callouts to play them here with one tap.": "Füge Ansagen hinzu, um sie hier mit einem Tippen abzuspielen."
   }
  },
  "es": {
@@ -1386,7 +1391,12 @@
    "Select a race to adjust its EnterAt and ExitAt": "Selecciona una carrera para ajustar su EnterAt y ExitAt",
    "Tip": "Consejo",
    "Warning": "Advertencia",
-   "Skip to content": "Saltar al contenido"
+   "Skip to content": "Saltar al contenido",
+   "Cancel Start": "Cancelar inicio",
+   "Start the race in": "Iniciar la carrera en",
+   "Edit Callouts": "Editar llamadas",
+   "History": "Historial",
+   "Add callouts to play them here with one tap.": "Añade llamadas para reproducirlas aquí con un toque."
   }
  },
  "fr-be": {
@@ -2081,7 +2091,12 @@
    "Select a race to adjust its EnterAt and ExitAt": "Sélectionnez une course pour ajuster ses EnterAt et ExitAt",
    "Tip": "Astuce",
    "Warning": "Avertissement",
-   "Skip to content": "Aller au contenu"
+   "Skip to content": "Aller au contenu",
+   "Cancel Start": "Annuler le départ",
+   "Start the race in": "Lancer la course dans",
+   "Edit Callouts": "Modifier les annonces",
+   "History": "Historique",
+   "Add callouts to play them here with one tap.": "Ajoutez des annonces pour les lire ici d’un simple toucher."
   }
  },
  "it": {
@@ -2773,7 +2788,12 @@
    "Select a pilot to adjust their EnterAt and ExitAt": "Seleziona un pilota per regolarne EnterAt ed ExitAt",
    "Select a race to adjust its EnterAt and ExitAt": "Seleziona una gara per regolarne EnterAt ed ExitAt",
    "Tip": "Suggerimento",
-   "Skip to content": "Vai al contenuto"
+   "Skip to content": "Vai al contenuto",
+   "Cancel Start": "Annulla partenza",
+   "Start the race in": "Avvia la gara tra",
+   "Edit Callouts": "Modifica chiamate",
+   "History": "Cronologia",
+   "Add callouts to play them here with one tap.": "Aggiungi chiamate per riprodurle qui con un tocco."
   }
  },
  "nl-be": {
@@ -3467,7 +3487,12 @@
    "Select a race to adjust its EnterAt and ExitAt": "Kies een race om de EnterAt en ExitAt aan te passen",
    "Tip": "Tip",
    "Warning": "Waarschuwing",
-   "Skip to content": "Naar inhoud springen"
+   "Skip to content": "Naar inhoud springen",
+   "Cancel Start": "Start annuleren",
+   "Start the race in": "Start de race over",
+   "Edit Callouts": "Aankondigingen bewerken",
+   "History": "Geschiedenis",
+   "Add callouts to play them here with one tap.": "Voeg aankondigingen toe om ze hier met één tik af te spelen."
   }
  },
  "pl": {
@@ -4161,7 +4186,12 @@
    "Select a race to adjust its EnterAt and ExitAt": "Wybierz wyścig, aby dostosować jego EnterAt i ExitAt",
    "Tip": "Wskazówka",
    "Warning": "Ostrzeżenie",
-   "Skip to content": "Przejdź do treści"
+   "Skip to content": "Przejdź do treści",
+   "Cancel Start": "Anuluj start",
+   "Start the race in": "Rozpocznij wyścig za",
+   "Edit Callouts": "Edytuj komunikaty",
+   "History": "Historia",
+   "Add callouts to play them here with one tap.": "Dodaj komunikaty, aby odtwarzać je tutaj jednym dotknięciem."
   }
  },
  "ja-JP": {
@@ -4855,7 +4885,12 @@
    "Select a race to adjust its EnterAt and ExitAt": "レースを選択して EnterAt と ExitAt を調整",
    "Tip": "ヒント",
    "Warning": "警告",
-   "Skip to content": "コンテンツへスキップ"
+   "Skip to content": "コンテンツへスキップ",
+   "Cancel Start": "スタートを取り消す",
+   "Start the race in": "レース開始まで",
+   "Edit Callouts": "読み上げを編集",
+   "History": "履歴",
+   "Add callouts to play them here with one tap.": "読み上げを追加すると、ここからワンタップで再生できます。"
   }
  },
  "zh-CN": {
@@ -5548,7 +5583,12 @@
    "Select a pilot to adjust their EnterAt and ExitAt": "选择一名飞手以调整其 EnterAt 和 ExitAt",
    "Select a race to adjust its EnterAt and ExitAt": "选择一场比赛以调整其 EnterAt 和 ExitAt",
    "Tip": "提示",
-   "Skip to content": "跳到内容"
+   "Skip to content": "跳到内容",
+   "Cancel Start": "取消开始",
+   "Start the race in": "比赛开始倒计时",
+   "Edit Callouts": "编辑播报",
+   "History": "历史",
+   "Add callouts to play them here with one tap.": "添加播报后，即可在此一键播放。"
   }
  },
  "ru": {
@@ -6241,7 +6281,12 @@
    "Select a pilot to adjust their EnterAt and ExitAt": "Выберите пилота, чтобы настроить его EnterAt и ExitAt",
    "Select a race to adjust its EnterAt and ExitAt": "Выберите гонку, чтобы настроить её EnterAt и ExitAt",
    "Tip": "Совет",
-   "Skip to content": "Перейти к содержимому"
+   "Skip to content": "Перейти к содержимому",
+   "Cancel Start": "Отменить старт",
+   "Start the race in": "Старт гонки через",
+   "Edit Callouts": "Изменить объявления",
+   "History": "История",
+   "Add callouts to play them here with one tap.": "Добавьте объявления, чтобы воспроизводить их здесь одним нажатием."
   }
  }
 }

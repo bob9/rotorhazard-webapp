@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** Live tuning of one node: RSSI graph, EnterAt / ExitAt, capture, stats. */
+/** Live tuning of one node: RSSI graph (with recent history), EnterAt / ExitAt, capture, stats. */
 const props = defineProps<{ node: number }>()
 const rh = useRH()
 const { t } = useI18n()
@@ -17,6 +17,14 @@ rh.on('node_enter_at_level', (d: any) => { if (d.node_index === props.node) ente
 rh.on('node_exit_at_level', (d: any) => { if (d.node_index === props.node) exitAt.value = d.level })
 
 const paused = ref(false)
+// how much history the graph shows (kept per device)
+const WINDOW_KEY = 'rh.rssiWindowSec'
+const windows = [{ label: '20s', value: 20 }, { label: '1m', value: 60 }, { label: '5m', value: 300 }]
+const windowSec = ref(20)
+try { windowSec.value = windows.find(w => w.value === Number(localStorage.getItem(WINDOW_KEY)))?.value ?? 20 } catch { /* storage unavailable */ }
+watch(windowSec, (v) => {
+  try { localStorage.setItem(WINDOW_KEY, String(v)) } catch { /* storage unavailable */ }
+})
 const color = computed(() => colorHex(S.current_heat?.heatNodes?.[props.node]?.activeColor, '#fe5d11'))
 const nd = computed(() => S.node_data || {})
 const stat = (k: string) => nd.value[k]?.[props.node] ?? 0
@@ -54,13 +62,28 @@ const warnings = computed(() => {
           {{ rssi }}
         </div>
       </div>
-      <UButton
-        :icon="paused ? 'i-lucide-play' : 'i-lucide-pause'"
-        color="neutral"
-        variant="soft"
-        :label="paused ? t('Resume') : t('Pause')"
-        @click="paused = !paused"
-      />
+      <div class="flex items-center gap-2">
+        <UFieldGroup :aria-label="t('History')">
+          <UButton
+            v-for="w in windows"
+            :key="w.value"
+            color="neutral"
+            :variant="windowSec === w.value ? 'solid' : 'outline'"
+            size="sm"
+            :label="w.label"
+            :aria-pressed="windowSec === w.value"
+            @click="windowSec = w.value"
+          />
+        </UFieldGroup>
+        <UButton
+          :icon="paused ? 'i-lucide-play' : 'i-lucide-pause'"
+          color="neutral"
+          variant="soft"
+          :label="paused ? t('Resume') : t('Pause')"
+          :ui="{ label: 'max-sm:sr-only' }"
+          @click="paused = !paused"
+        />
+      </div>
     </div>
 
     <RhRssiGraph
@@ -69,8 +92,10 @@ const warnings = computed(() => {
       :node="node"
       :color="color"
       :paused="paused"
+      :window-sec="windowSec"
+      axis
       editable
-      :height="240"
+      :height="260"
       @commit="commit"
     />
     <p class="text-xs text-muted">
